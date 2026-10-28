@@ -1,0 +1,13 @@
+node_modules/
+
+# A data directory made here by mistake (the default is ~/.config/agent-courier)
+.courier/
+state.json
+state.lock
+
+# The test suites are kept privately and not published.
+*.test.ts
+/test/
+
+# Personal Claude Code settings for this checkout
+.claude/settings.local.json

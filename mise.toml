@@ -1,0 +1,29 @@
+# mise installs Node; the JS tools (TypeScript, oxlint, prettier) are devDependencies in
+# package.json, pinned by package-lock.json. These tasks run its scripts, so one
+# `mise run check` covers what a change must pass.
+[tools]
+node = "24"
+
+[tasks.install]
+description = "Install the pinned packages (npm ci)"
+run = "npm ci"
+
+[tasks.fmt]
+description = "Format the repo with prettier"
+run = "npm run fmt"
+
+[tasks.typecheck]
+description = "Type-check with tsc --noEmit"
+run = "npm run typecheck"
+
+[tasks.lint]
+description = "Lint src and bin with oxlint"
+run = "npm run lint"
+
+[tasks.check]
+description = "What a change must pass: formatting, types and lint"
+run = [
+  "npm run fmt:check",
+  "npm run typecheck",
+  "npm run lint",
+]
