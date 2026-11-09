@@ -5,9 +5,18 @@
   </picture>
 </p>
 
-<p align="center">English · <a href="README.zh-TW.md">繁體中文</a></p>
+<p align="center">
+  <b>Messages between Claude Code sessions on your own machines.</b><br>
+  Over SSH, with your approval before each send. No third party in between.
+</p>
 
-# agent-courier
+<p align="center">
+  English · <a href="README.zh-TW.md">繁體中文</a>
+</p>
+
+---
+
+## What it is
 
 agent-courier lets Claude Code sessions on different machines send messages to each other. The
 machines can use different Claude accounts. The messages go over SSH between your own machines.

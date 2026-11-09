@@ -5,9 +5,18 @@
   </picture>
 </p>
 
-<p align="center"><a href="README.md">English</a> · 繁體中文</p>
+<p align="center">
+  <b>讓你自己機器上的 Claude Code 工作階段互相傳訊息。</b><br>
+  走 SSH，每次傳送前先問你，中間不經過任何第三方。
+</p>
 
-# agent-courier
+<p align="center">
+  <a href="README.md">English</a> · 繁體中文
+</p>
+
+---
+
+## 這是什麼
 
 agent-courier 讓不同機器上的 Claude Code 工作階段互相傳訊息。各台機器可以用不同的 Claude 帳號。訊息走你自己機器之間的 SSH，不經過任何第三方。
 
