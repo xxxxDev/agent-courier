@@ -89,6 +89,7 @@ These two are real screens from one machine.
 
 ## Requirements
 
+- macOS. Tested on Macs with Apple silicon and with Intel; Linux and Windows are not tested.
 - Node 22.18 or later, Git and npm.
 - SSH from machine A to machine B: the OpenSSH client on machine A, the server on machine B.
 - On each machine, a Claude Code that speaks MCP 2026-07-28 with form elicitation. Use 2.1.311

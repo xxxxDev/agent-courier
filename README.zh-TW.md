@@ -88,6 +88,7 @@ Codex 和 `agy` 不會顯示這個問題。對它們的 agent 開了自動核准
 
 ## 需求
 
+- macOS。在 Apple 晶片和 Intel 晶片的 Mac 上都測過；Linux 和 Windows 沒測過。
 - Node 22.18 以上、Git 和 npm。
 - 從機器 A 到機器 B 的 SSH：機器 A 要有 OpenSSH 用戶端，機器 B 要有 OpenSSH 伺服器。
 - 每台機器上支援 MCP 2026-07-28 和表單詢問（form elicitation）的 Claude Code。
