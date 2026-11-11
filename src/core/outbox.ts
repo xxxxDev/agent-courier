@@ -10,6 +10,7 @@ import {
   KEEP_MS,
   KEEP_PER_AGENT,
   LEASE_MS,
+  MAX_ITEMS,
 } from "./limits.ts";
 import { allows } from "./allow.ts";
 import type { OutMsg, OutStatus, Refusal, State } from "./state.ts";
@@ -96,8 +97,9 @@ export const toWire = (m: OutMsg): WireItem => ({
 });
 
 /**
- * What goes out now for this pairing, up to `budget` bytes, each leased for LEASE_MS. One
- * that may no longer go (the agent gone, the allow taken back) is abandoned.
+ * What goes out now for this pairing, up to `budget` bytes and MAX_ITEMS items (the other
+ * side refuses a bigger envelope), each leased for LEASE_MS. One that may no longer go (the
+ * agent gone, the allow taken back) is abandoned.
  */
 export function collect(
   s: State,
@@ -126,7 +128,7 @@ export function collect(
       settleOut(m, "refused", "too large to send", now);
       continue;
     }
-    if (bytes + size > budget) continue;
+    if (bytes + size > budget || items.length >= MAX_ITEMS) continue;
     bytes += size;
     m.leaseUntil = now + LEASE_MS;
     m.handed = true;
