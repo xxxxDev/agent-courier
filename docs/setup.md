@@ -5,7 +5,7 @@ answers:
 
 - Machine A needs SSH access to machine B.
 - Machine B needs only its SSH server. It gets no new open port.
-- Each machine runs `courier serve` for its own Claude Code sessions.
+- Each machine runs `courier serve` for its own agent sessions.
 
 The examples use the names `machine-a`, `machine-b`, `writer` (an agent on A) and `helper` (an
 agent on B). Use your own names.

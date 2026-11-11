@@ -11,7 +11,7 @@ import { UsageError } from "./args.ts";
 
 export const VERSION = "2026.11.11";
 
-export const HELP = `courier ${VERSION}: messages between Claude Code sessions on your own machines, over SSH
+export const HELP = `courier ${VERSION}: messages between AI agent sessions on your own machines, over SSH
 
 Usage:
   courier init --name <machine> [--port <port>]   create the data directory and state

@@ -1,7 +1,7 @@
 {
   "name": "agent-courier",
   "version": "2026.11.11",
-  "description": "Messages between Claude Code sessions on your own machines, over SSH, with no third party",
+  "description": "Messages between AI agent sessions (Claude Code, Codex, agy) on your own machines, over SSH, with no third party",
   "license": "MIT",
   "private": true,
   "type": "module",

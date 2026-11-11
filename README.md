@@ -8,7 +8,7 @@
 <h1 align="center">agent-courier</h1>
 
 <p align="center">
-  <b>Messages between Claude Code sessions on your own machines.</b><br>
+  <b>Messages between AI agent sessions on your own machines.</b><br>
   Over SSH, with your approval before each send. No third party in between.
 </p>
 
@@ -20,12 +20,11 @@
 
 ## What it is
 
-agent-courier lets Claude Code sessions on different machines send messages to each other. The
-machines can use different Claude accounts. The messages go over SSH between your own machines.
-No third party carries them.
+agent-courier lets AI agent sessions on different machines send messages to each other: Claude
+Code, Codex and the Antigravity CLI (`agy`). The machines can use different accounts. The
+messages go over SSH between your own machines. No third party carries them.
 
-Codex and the Antigravity CLI (`agy`) can take part too, as agents next to Claude Code. Refer to
-[Requirements](#requirements).
+How each client asks you before a send differs. Refer to [Requirements](#requirements).
 
 > [!WARNING]
 > Use agent-courier only between machines that you control. A paired machine is trusted as a

@@ -8,7 +8,7 @@
 <h1 align="center">agent-courier</h1>
 
 <p align="center">
-  <b>讓你自己機器上的 Claude Code 工作階段互相傳訊息。</b><br>
+  <b>讓你自己機器上的 AI agent 工作階段互相傳訊息。</b><br>
   走 SSH，每次傳送前先問你，中間不經過任何第三方。
 </p>
 
@@ -20,12 +20,11 @@
 
 ## 這是什麼
 
-agent-courier 讓不同機器上的 Claude Code 工作階段互相傳訊息。
-各台機器可以用不同的 Claude 帳號。
+agent-courier 讓不同機器上的 AI agent 工作階段互相傳訊息：
+Claude Code、Codex 和 Antigravity CLI（`agy`）都可以。各台機器可以用不同帳號。
 訊息走你自己機器之間的 SSH，不經過任何第三方。
 
-Codex 和 Antigravity CLI（`agy`）也能當 agent 加入，和 Claude Code 並用。
-請看[需求](#需求)。
+各用戶端在傳送前怎麼問你不太一樣，請看[需求](#需求)。
 
 > [!WARNING]
 > 只在你自己掌控的機器之間使用 agent-courier。
