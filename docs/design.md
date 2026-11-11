@@ -118,8 +118,8 @@ The envelope (version 1):
 - **Order.** Items go oldest first, but those the other side refused for now (rate, unread,
   loop) go after the others, so they cannot hold back the rest of the queue; with room left
   they are tried again in the same round. Between one local agent and one remote agent the
-  order stays: once one of theirs is deferred, or does not fit this round, the later ones wait
-  behind it. The wire format does not change, so machines on the two versions still exchange.
+  order stays: once one of theirs is deferred, is still out on its lease (its
+  answer may have been lost), or does not fit this round, the later ones wait behind it. The wire format does not change, so machines on the two versions still exchange.
 - **Failure.** The forced command prints `{"error":"exchange failed"}` for every failure
   (including a request not complete within 20 seconds), normally writes no state, and the
   caller counts the call as failed. The one exception is a write that is in place but whose

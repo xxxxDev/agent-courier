@@ -107,7 +107,7 @@ const orderKey = (m: OutMsg) => `${m.agent}\u0000${m.to}`;
  * Order: messages the other side refused for now go after the others, so they cannot hold
  * back the rest of the queue; with room left they are tried again in the same round.
  * Between one local agent and one remote agent the order stays: once one of theirs is
- * deferred, or does not fit this round, the later ones wait behind it.
+ * deferred, still out on its lease, or does not fit this round, the later ones wait behind it.
  */
 export function collect(
   s: State,
@@ -119,13 +119,16 @@ export function collect(
   const ready: OutMsg[] = [];
   const later: OutMsg[] = [];
   const deferredKeys = new Set<string>();
+  // An earlier one still out on its lease (its answer may have been lost) holds the later
+  // ones between the same two agents back, so they cannot arrive before it.
+  const leasedKeys = new Set<string>();
   for (const m of s.outbox) {
-    if (
-      m.pairId !== pairId ||
-      m.status !== "queued" ||
-      (m.leaseUntil ?? 0) > now
-    )
+    if (m.pairId !== pairId || m.status !== "queued") continue;
+    if ((m.leaseUntil ?? 0) > now) {
+      leasedKeys.add(orderKey(m));
       continue;
+    }
+    if (leasedKeys.has(orderKey(m))) continue;
     const a = s.agents.find((x) => x.name === m.agent);
     if (!allows(a, pairId, m.to)) {
       abandon(m, "the agent was closed to that agent", now);
