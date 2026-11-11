@@ -1,8 +1,10 @@
-// The MCP endpoint: Streamable HTTP on 127.0.0.1 only, MCP 2026-07-28 only. Every request
-// stands alone (no session) and is served by a fresh server built for the agent whose
-// bearer token came with it. Before the SDK sees a request: the Host must be a loopback
+// The MCP endpoint: Streamable HTTP on 127.0.0.1 only. MCP 2026-07-28, and 2025-era clients
+// (such as Codex) served stateless. Every request stands alone (no session) and is served by
+// a fresh server built for the agent whose bearer token came with it. A 2025-era client
+// cannot be asked (its capabilities do not reach the next request's server), so its sends
+// are refused unless auto-approve is on. Before the SDK sees a request: the Host must be a loopback
 // name of our port (DNS rebinding), no Origin (agents are not browsers), POST /mcp only,
-// a known token, and a body within the limit.
+// a known token, a body within the limit, and one message (no batch).
 
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { Readable } from "node:stream";
@@ -88,10 +90,10 @@ export function createMcpHandler(opts: McpHttpOptions) {
     (ctx) => {
       const agent = ctx.authInfo?.clientId;
       if (!agent) throw new Error("request without an agent");
-      return buildServer(opts.deps, agent);
+      return buildServer(opts.deps, agent, ctx.era !== "legacy");
     },
     {
-      legacy: "reject",
+      legacy: "stateless",
       maxRequestBodySize: maxBody,
       onerror: (err) => log(`[mcp] ${redact(err.message)}`),
     },
@@ -124,6 +126,10 @@ export function createMcpHandler(opts: McpHttpOptions) {
         return reply(res, 413, "request body too large", {
           connection: "close",
         });
+      // 2025-era JSON-RPC allows batches; one message per request keeps the load per call
+      // the same for every client.
+      if (body.trimStart().startsWith("["))
+        return reply(res, 400, "batch requests are not accepted");
       const headers = new Headers();
       for (const [name, value] of Object.entries(req.headers))
         if (value !== undefined && !HOP_BY_HOP.has(name))

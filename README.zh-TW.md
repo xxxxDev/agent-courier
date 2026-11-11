@@ -80,6 +80,9 @@ agent 傳送任何東西之前，Claude Code 會先問你，全文放在 **Send*
 - 每台機器上支援 MCP 2026-07-28 和表單詢問（form elicitation）的 Claude Code。
   要在哪台機器上確認傳送，那台就用 2.1.311 以上。
   2.1.295 也能用，但確認問題裡的長行會被截斷。
+- Codex 等其他 MCP 用戶端也能連上。只支援舊版 MCP 的用戶端沒辦法問你，
+  所以要開 `courier auto-approve` 才能傳送。
+  請看 [docs/mcp.md](docs/mcp.md#protocol)。
 
 ## 快速開始
 

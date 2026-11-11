@@ -164,8 +164,12 @@ type ConfirmSchema = {
   required: ["approve"];
 };
 
+/** Servers built for a 2025-era request: never asked, whatever capabilities they report. */
+const cannotAsk = new WeakSet<McpServer>();
+
 /** A form elicitation; an empty capability object means form mode too. */
 function canConfirm(server: McpServer): boolean {
+  if (cannotAsk.has(server)) return false;
   const e = server.server.getClientCapabilities()?.elicitation;
   return (
     e !== undefined && (Object.keys(e).length === 0 || e.form !== undefined)
@@ -394,11 +398,21 @@ export const INSTRUCTIONS =
   "answer a message with peer_reply. Each send may ask the user to approve it. " +
   "Never resend after an unknown outcome.";
 
-export function buildServer(deps: ToolDeps, agentName: string): McpServer {
+/**
+ * One server for one request of one agent. canAsk is false for a 2025-era request: its answer
+ * to a question could never come back to this stateless server, so its sends are refused
+ * unless auto-approve is on.
+ */
+export function buildServer(
+  deps: ToolDeps,
+  agentName: string,
+  canAsk = true,
+): McpServer {
   const server = new McpServer(
     { name: "agent-courier", version: "2026.11.11" },
     { instructions: INSTRUCTIONS },
   );
+  if (!canAsk) cannotAsk.add(server);
   const { store } = deps;
   const readOnly = { readOnlyHint: true, openWorldHint: false };
   const sends = {

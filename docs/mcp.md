@@ -6,14 +6,18 @@ The bearer token of a request tells the endpoint which agent the session is.
 
 ## Protocol
 
-The endpoint accepts only MCP version 2026-07-28. Each request is independent: there is no
+The endpoint speaks MCP version 2026-07-28. Each request is independent: there is no
 `initialize` handshake and no session. When a call needs your approval, the server answers
 with `input_required`. The client asks you, then sends the call again with your answer.
 
-The endpoint rejects older clients with error `-32022` (unsupported protocol version).
+To approve sends, the client must speak MCP 2026-07-28 and support form elicitation. Claude
+Code 2.1.295 and 2.1.311 were tested end to end between two machines over SSH. The Antigravity
+CLI (`agy`) 1.5.5 also speaks 2026-07-28; it was tested on one machine.
 
-The client must speak MCP 2026-07-28 and, to approve sends, support form elicitation. Claude
-Code 2.1.295 and 2.1.311 were tested end to end between two machines over SSH.
+The endpoint also serves clients that speak an older version (2025-11-25 and earlier), such as
+Codex, without a session. All tools work, but such a client can never be asked: each send is
+refused unless auto-approve is on for that agent (see [Auto-approve](#auto-approve)). Codex
+0.167.1 was tested on one machine, with Claude Code and with Codex on the other side.
 
 How the approval question looks depends on the client version:
 
@@ -40,13 +44,35 @@ claude mcp add --transport http courier http://127.0.0.1:47800/mcp \
   token to two sessions: they would share one inbox.
 - Claude Code keeps the header, with the token, in its configuration. Do not let other persons
   read that file.
-- For a different client, use the same URL and header. The client must use MCP 2026-07-28. To
-  approve sends, it must support form elicitation.
+- For a different client, use the same URL and header. To approve sends, it must use MCP
+  2026-07-28 and support form elicitation. An older client can connect, but sends only with
+  auto-approve on (see [Protocol](#protocol)).
+- For Codex, add the server to `~/.codex/config.toml` and keep the token in an environment
+  variable:
+
+  ```toml
+  [mcp_servers.courier]
+  url = "http://127.0.0.1:47800/mcp"
+  bearer_token_env_var = "COURIER_TOKEN"
+  ```
+
+  Codex asks for its own approval before it calls an MCP tool. In `codex exec`, which cannot
+  ask, set `default_tools_approval_mode = "approve"` in that section, or the sends are blocked.
+  With that setting and `courier auto-approve` on, no person sees a message before it goes.
+
+- Codex passes its environment to the shell commands it runs, so an agent could read the token
+  and use it to answer its own approval questions. Exclude the variable in the same file
+  (tested with Codex 0.167.1):
+
+  ```toml
+  [shell_environment_policy]
+  exclude = ["COURIER_TOKEN"]
+  ```
 
 > [!IMPORTANT]
 > Prevent agent access to the data directory (`~/.config/agent-courier`) and to the client
-> configuration that holds the token. For example, use a sandbox rule that denies read and
-> write access. A program with the token can act as that agent and can answer its approval
+> configuration or environment variable that holds the token. For example, use a sandbox rule
+> that denies read and write access. A program with the token can act as that agent and can answer its approval
 > questions.
 
 ## Tools
@@ -239,6 +265,10 @@ again. Your approval starts the count again. The receiving machine applies the s
 after 12 messages without an approval on its side, it refuses more for now, and they stay
 queued on the sending machine.
 
+A client on an older MCP version cannot ask, so at the limit its sends are refused. To start
+the count again, approve one send for that agent from a client that can ask, such as Claude
+Code with the same token.
+
 ## Idempotency
 
 - The server queues each `idempotency_key` one time per agent, for 24 hours. A call with the
@@ -298,7 +328,9 @@ The endpoint checks each request in this order before the MCP layer reads it:
 | 405    | `method not allowed`                | The method is not `POST`                               |
 | 401    | `unauthorized`                      | No bearer token, or no agent has this token            |
 | 413    | `request body too large`            | The body is larger than 128 KB                         |
+| 400    | `batch requests are not accepted`   | The body is a JSON-RPC batch (an array)                |
 | 500    | `internal error`                    | An unexpected error. The service log has the details   |
 
 The body is a JSON-RPC error object with code `-32000`. After these checks, protocol errors
-come from the MCP SDK, for example `-32022` for an old protocol version.
+come from the MCP SDK, for example `-32022` for a request that names a protocol version the
+endpoint does not support.

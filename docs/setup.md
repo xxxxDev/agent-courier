@@ -18,7 +18,8 @@ agent on B). Use your own names.
 - OpenSSH: the client on machine A, the server on machine B.
 - Claude Code that speaks MCP 2026-07-28 and supports form elicitation. Versions 2.1.295 and
   2.1.311 were tested; approve sends in 2.1.311 or later, because 2.1.295 cuts long lines in the
-  approval question. Refer to [mcp.md](mcp.md#protocol).
+  approval question. Older MCP clients such as Codex can connect too, but send only with
+  auto-approve on. Refer to [mcp.md](mcp.md#protocol).
 
 ## Install
 
@@ -290,7 +291,6 @@ Then restart `courier serve`. Update both machines: the two must use the same ex
 | `peer_status` shows `refused`, `that agent is not open to this one`       | The receiving machine does not allow the sender. Run `courier allow` there                                                                                                            |
 | Messages stay `queued`                                                    | The other side is paused, does not answer, or limits its inbox. `courier status` on both machines shows the reason. After 24 hours, messages expire                                   |
 | Claude Code shows `unauthorized` (401)                                    | The token is wrong, or the agent was removed. Add the agent again and run the new `claude mcp add`                                                                                    |
-| Claude Code cannot connect, error `-32022`                                | The client does not speak MCP 2026-07-28. Update Claude Code                                                                                                                          |
 | The agent gets `Denied: ... this client cannot ask (MCP elicitation)`     | The client cannot show approval questions. Use a client with elicitation, or turn on `courier auto-approve` for that agent                                                            |
 | `courier: .../state.json can be read by other users; run chmod 600 on it` | Someone changed the mode. Run `chmod 600` on the file (and `chmod 700` on the directory)                                                                                              |
 | `could not lock .../state.lock`                                           | Another process holds the lock for more than 5 seconds. A lock older than 10 seconds is taken over automatically                                                                      |

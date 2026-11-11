@@ -80,6 +80,9 @@ These are real screens from two machines on different Claude accounts, linked ov
 - On each machine, a Claude Code that speaks MCP 2026-07-28 with form elicitation. Use 2.1.311
   or later on any machine where you approve sends: 2.1.295 works but cuts long lines in the
   approval question.
+- Other MCP clients, such as Codex, can connect too. A client that speaks an older MCP version
+  cannot ask you, so it sends only with `courier auto-approve` on. Refer to
+  [docs/mcp.md](docs/mcp.md#protocol).
 
 ## Quick start
 
