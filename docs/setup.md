@@ -194,7 +194,8 @@ of the other at the next exchange.
 
 ## 8. Add agents and allow them
 
-Each session that uses agent-courier (Claude Code, Codex or `agy`) is one agent. Add an agent on each machine:
+Each session that uses agent-courier (Claude Code, Codex or `agy`) is one agent. Add an agent
+on each machine:
 
 ```bash
 courier agent add writer    # on machine A
@@ -289,6 +290,9 @@ COURIER_HOME=~/.config/agent-courier-b courier enable machine-a
 
 - Each item of the array is one argument, with no shell: write absolute paths, as `pair`
   printed them. A calls this command for each exchange and reads the answer from it.
+- `pair` prints the command for a shell: a path with a space or another special character is
+  in single quotes there. In the array, write the plain path, without those quotes, for
+  example `"/Users/Jane Doe/agent-courier/bin/courier.js"`.
 - Then add agents and allow them as in [step 8](#8-add-agents-and-allow-them), each with the
   `COURIER_HOME` of its instance: for example `claude` on A and `codex` on B, with
   `courier allow claude machine-b/codex` on A and `courier allow codex machine-a/claude` on B.
@@ -325,6 +329,13 @@ Then restart `courier serve`. Update both machines: the two must use the same ex
 The line in `authorized_keys` holds the absolute paths of `node` and of the checkout. After you
 upgrade Node (with nvm, Homebrew or mise the path changes) or move the checkout, take the new
 line from `courier status` on machine B and replace the old one in `~/.ssh/authorized_keys`.
+
+With two instances on one machine (see [On one machine](#on-one-machine)), the paths are kept
+in the pairing on A, and no command changes them. `courier status` on A then shows
+`last error: exited with 127` (or `with 1`). Pair again: run `courier revoke machine-b` on A
+and `courier revoke machine-a` on B, make a new code on B, join on A with the new command, and
+enable on both. Revoking removes the allow entries of that pairing, so run `courier allow` on
+both again. Messages that waited for the old pairing do not go.
 
 ## Problems
 

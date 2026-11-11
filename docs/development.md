@@ -42,10 +42,11 @@ session you care about.
 
 ## The command transport
 
-`courier join ... --command '<JSON array>'` (not listed in `courier help`) uses a program in place of ssh: the first item is
+`courier join ... --command '<JSON array>'` uses a program in place of ssh: the first item is
 the absolute path of the program, the others are its arguments. agent-courier writes the
-request to its stdin and reads one JSON answer from its stdout, with no shell. You can use it to
-run the other instance's forced command directly, or to wrap ssh in a different tool. Each pairing stores its transport in `state.json`.
+request to its stdin and reads one JSON answer from its stdout, with no shell. Each pairing
+stores its transport in `state.json`. For its main use, two instances on one machine, refer to
+[On one machine](setup.md#on-one-machine). You can also use it to wrap ssh in a different tool.
 
 ## Add a tool
 

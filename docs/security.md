@@ -118,8 +118,8 @@ over a lock only when its process is gone or it is older than 60 seconds.
   on. The question's message (at most 4 lines) names the recipient and gives the size of the
   text in characters and lines. The whole text, each line quoted, is the description of the
   question's Send field: Claude Code shows only the first 4 lines of a message, but a field's
-  description in full (Claude Code 2.1.311; 2.1.295 cuts long lines there, so approve in 2.1.311 or later). The approval is bound to the exact arguments,
-  the agent and the pairing. It lapses after 60 seconds. Each agent can have at most 4
+  description in full (Claude Code 2.1.311; 2.1.295 cuts long lines there, so approve in
+  2.1.311 or later). The approval is bound to the exact arguments, the agent and the pairing. It lapses after 60 seconds. Each agent can have at most 4
   questions open, so one agent cannot block the questions of another.
 - How the question looks is up to the client. agent-courier makes sure that the text has
   nothing that does not show: it refuses control characters other than tabs and line breaks,
@@ -158,6 +158,11 @@ These are the limits of what agent-courier can do. Plan for them.
   `state.json`, the SSH key and the client configuration, unless a sandbox stops it. Such a
   program can add agents, change allow lists or send as any agent. agent-courier does not
   protect against the user's own unsandboxed programs.
+- **Two instances on one machine are one trust domain.** Both data directories belong to the
+  same user, so a program that runs as that user can read and change both, and the allow lists
+  and approvals between them guard against the models only. Instance A runs the command stored
+  in its pairing for each exchange, as your user: anyone who can change A's `state.json` can
+  change that command.
 - **Trust is per pairing.** If machine A is compromised, it can deliver to every agent on
   machine B that allows any agent of machine A, name any of its agents as the sender, and take
   what machine B queued for machine A. It cannot use another machine's pairing.
