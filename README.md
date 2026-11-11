@@ -92,7 +92,7 @@ These two are real screens from one machine.
 - macOS. Tested on Macs with Apple silicon and with Intel; Linux and Windows are not tested.
 - Node 22.18 or later, Git and npm.
 - SSH from machine A to machine B: the OpenSSH client on machine A, the server on machine B.
-- On each machine, a Claude Code that speaks MCP 2026-07-28 with form elicitation. Use 2.1.311
+- If you use Claude Code: a version that speaks MCP 2026-07-28 with form elicitation. Use 2.1.311
   or later on any machine where you approve sends: 2.1.295 works but cuts long lines in the
   approval question.
 - Codex 0.167.1 and `agy` 1.5.5 can connect too, on one machine and between two. Neither shows
@@ -125,7 +125,7 @@ and its forced command need some steps first: see [docs/setup.md](docs/setup.md)
 
 ## Limits
 
-- Text only, 8,000 characters or 12 KB. 30 messages an hour between two agents. 10 messages
+- Text only, 8,000 characters or 12,000 bytes. 30 messages an hour between two agents. 10 messages
   waiting per agent. 12 messages back and forth without your approval, then a stop. Messages
   expire after 24 hours.
 - There is no npm package yet. Install from a checkout.

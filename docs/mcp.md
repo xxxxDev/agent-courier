@@ -150,11 +150,11 @@ Result:
 
 ### peer_send
 
-| Field             | Type   | Rules                                                                                                                |
-| ----------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
-| `to`              | string | `machine/agent` from `peer_agents`, at most 80 characters                                                            |
-| `text`            | string | 1 to 8,000 characters, at most 12 KB as JSON, at most 200 lines and two blank lines in a row. Refer to [Text](#text) |
-| `idempotency_key` | string | 8 to 128 printable ASCII characters, no spaces. A new key for each message                                           |
+| Field             | Type   | Rules                                                                                                                                                            |
+| ----------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `to`              | string | `machine/agent` from `peer_agents`, at most 80 characters                                                                                                        |
+| `text`            | string | 1 to 8,000 characters (UTF-16 units: an emoji counts as 2), at most 12,000 bytes as JSON, at most 200 lines and two blank lines in a row. Refer to [Text](#text) |
+| `idempotency_key` | string | 8 to 128 printable ASCII characters, no spaces. A new key for each message                                                                                       |
 
 Result (the message is queued; it goes with the next exchange):
 
@@ -226,14 +226,14 @@ reply. To continue the conversation, use `peer_send`.
 Result: one message, or `{ "messages": [...] }`. Each has `message_id`, `to`, `kind`,
 `status`, `at`, and when settled `result_at` and maybe `reason`.
 
-| Status      | Meaning                                                                                                                                                                                                                    |
-| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `queued`    | Waits for the next exchange, or the other machine refused it for now (`reason` says why)                                                                                                                                   |
-| `in-flight` | It was handed to the other machine, then the pairing was paused or revoked, or the allow or the agent was removed. It will not go again; it may have arrived. A later receipt still changes it to `delivered` or `refused` |
-| `delivered` | The other machine put it in the agent's inbox                                                                                                                                                                              |
-| `refused`   | The other machine refused it for good (`reason` says why)                                                                                                                                                                  |
-| `expired`   | Not taken in 24 hours                                                                                                                                                                                                      |
-| `unsent`    | It will not go, and it was never handed over: the pairing was paused or revoked, the allow or the agent was removed                                                                                                        |
+| Status      | Meaning                                                                                                                                                                                                                                                           |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `queued`    | Waits for the next exchange, or the other machine refused it for now (`reason` says why)                                                                                                                                                                          |
+| `in-flight` | It was handed to the other machine, then the pairing was paused or revoked, or the allow or the agent was removed. It will not go again; it may have arrived. A later receipt still changes it to `delivered` or `refused`                                        |
+| `delivered` | The other machine put it in the agent's inbox                                                                                                                                                                                                                     |
+| `refused`   | The other machine refused it for good (`reason` says why)                                                                                                                                                                                                         |
+| `expired`   | It waited 24 hours. `reason` says which: `not taken within 24 hours` (never handed over), or `not confirmed within 24 hours; it may have arrived` (handed over, but no receipt came back). In the second case, do not resend without checking with the other side |
+| `unsent`    | It will not go, and it was never handed over: the pairing was paused or revoked, the allow or the agent was removed                                                                                                                                               |
 
 A `reason` from the other machine always starts with `the other machine`. The other machine
 sends only a fixed code; this machine shows its own text for the code, so the words are never
@@ -290,14 +290,19 @@ This question lapses after 60 s; a later answer does nothing.
 - Each agent can have at most 4 questions open at the same time. Then a new call from that
   agent gets `Busy`. Other agents can still ask.
 - If the client cannot ask (no form elicitation), sends are refused, unless auto-approve is on.
+- Each machine counts messages between two agents, both ways, since the last approval on its
+  own side. After 12, the sending machine asks you again, and the receiving machine refuses more
+  for now (they stay queued on the sending machine) until its own agent's user approves a send
+  to the other agent. An approval on the sending machine does not reset the receiving
+  machine's count, so 12 messages in one direction, each approved by the sender, also reach the
+  limit there.
 
 ### Auto-approve
 
 `courier auto-approve <agent> on` lets that agent send without a question. One limit stays:
 after 12 messages back and forth with one agent without an approval, the next send asks you
-again. Your approval starts the count again. The receiving machine applies the same count:
-after 12 messages without an approval on its side, it refuses more for now, and they stay
-queued on the sending machine.
+again. Your approval starts the count again. The receiving machine keeps its own count (see
+[Approvals](#approvals)).
 
 A client that cannot ask, such as Codex or `agy`, has its sends refused at the limit. To start
 the count again, approve one send for that agent from a client that can ask, such as Claude
@@ -310,22 +315,23 @@ Code with the same token.
   again, and you are not asked again.
 - The same key with a different request is refused.
 - A declined or unanswered question does not use the key.
-- If the server cannot tell whether the message was stored, the key is locked for 24 hours and
+- If the server cannot tell whether the message was stored, the key is locked for 24 hours (in
+  memory: a restart of `courier serve` clears it) and
   the agent gets `Unknown outcome: ... Do not send it again`. This occurs when the state file
   was written but the disk did not confirm it.
 
 ## Limits
 
-| Limit                                       | Value                     | Where                |
-| ------------------------------------------- | ------------------------- | -------------------- |
-| Text                                        | 8,000 characters, 12 KB   | Both machines        |
-| Messages from one agent to one agent        | 30 an hour, per direction | Both machines        |
-| Messages of one agent that wait to be taken | 10                        | Sending machine      |
-| Unread messages in one inbox                | 10                        | Receiving machine    |
-| Messages back and forth without an approval | 12                        | Both machines        |
-| Time a message can wait                     | 24 hours                  | Sending machine      |
-| Questions that wait for you                 | 4 per agent               | Each `courier serve` |
-| Request body                                | 128 KB                    | MCP endpoint         |
+| Limit                                       | Value                          | Where                |
+| ------------------------------------------- | ------------------------------ | -------------------- |
+| Text                                        | 8,000 characters, 12,000 bytes | Both machines        |
+| Messages from one agent to one agent        | 30 an hour, per direction      | Both machines        |
+| Messages of one agent that wait to be taken | 10                             | Sending machine      |
+| Unread messages in one inbox                | 10                             | Receiving machine    |
+| Messages back and forth without an approval | 12                             | Both machines        |
+| Time a message can wait                     | 24 hours                       | Sending machine      |
+| Questions that wait for you                 | 4 per agent                    | Each `courier serve` |
+| Request body                                | 128 KB                         | MCP endpoint         |
 
 When the receiving machine refuses for now (rate, unread, loop), the message stays `queued`
 with a `reason` and goes again later. After 24 hours it expires.
@@ -334,17 +340,17 @@ with a `reason` and goes again later. After 24 hours it expires.
 
 A refused call returns `isError: true` and a text that starts with a fixed word:
 
-| Prefix             | Meaning                                                                               | What the agent should do               |
-| ------------------ | ------------------------------------------------------------------------------------- | -------------------------------------- |
-| `Invalid:`         | The text or an argument is not correct                                                | Correct it                             |
-| `Not found:`       | No such message in the inbox, or no such message of this agent                        | Check the `message_id`                 |
-| `Refused:`         | Not possible now: the pairing is off, already answered, key reused, arguments changed | Read the reason                        |
-| `Denied:`          | Not allowed: not in the allow list, or no approval possible                           | Tell the user                          |
-| `Limit:`           | A rate or waiting limit                                                               | Wait; do not queue more; tell the user |
-| `Busy:`            | This agent has 4 questions waiting for the user                                       | Try again later                        |
-| `Not sent:`        | The user declined, did not answer in 60 s, or the call was cancelled                  | Do not resend without the user         |
-| `Unknown outcome:` | The server cannot tell whether the message was stored                                 | Do not resend; check `peer_status`     |
-| `Failed:`          | An unexpected error. Always the same text; the details are only in the service log    | Do not resend; tell the user           |
+| Prefix             | Meaning                                                                                                                                                                                                                                                                                           | What the agent should do                                          |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `Invalid:`         | The text or an argument is not correct                                                                                                                                                                                                                                                            | Correct it                                                        |
+| `Not found:`       | No such message in the inbox, or no such message of this agent                                                                                                                                                                                                                                    | Check the `message_id`                                            |
+| `Refused:`         | Not possible now: the pairing is off, already answered, key reused, arguments changed                                                                                                                                                                                                             | Read the reason                                                   |
+| `Denied:`          | Not allowed: not in the allow list, or no approval possible                                                                                                                                                                                                                                       | Tell the user                                                     |
+| `Limit:`           | A rate or waiting limit                                                                                                                                                                                                                                                                           | Wait; do not queue more; tell the user                            |
+| `Busy:`            | This agent has 4 questions waiting for the user                                                                                                                                                                                                                                                   | Try again later                                                   |
+| `Not sent:`        | The user declined or did not answer in 60 s, the call was cancelled, no open question matched (already answered, or the service restarted), or the pairing name changed. One case says `Call again to ask`: approval became needed (auto-approve was switched off, or the loop limit was reached) | Call again only where the message says so, and only with the user |
+| `Unknown outcome:` | The server cannot tell whether the message was stored                                                                                                                                                                                                                                             | Do not resend; check `peer_status`                                |
+| `Failed:`          | An unexpected error. Always the same text; the details are only in the service log                                                                                                                                                                                                                | Do not resend; tell the user                                      |
 
 Arguments that do not match the schema are refused before the tool runs. The result has
 `isError: true` and starts with `Input validation error:`, for example

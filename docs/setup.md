@@ -14,6 +14,7 @@ agent on B). Use your own names.
 
 - Node 22.18 or later. agent-courier runs its TypeScript files directly with Node type
   stripping. There is no build step.
+- macOS. Tested on Macs with Apple silicon and with Intel; Linux and Windows are not tested.
 - Git and npm.
 - OpenSSH: the client on machine A, the server on machine B.
 - Claude Code that speaks MCP 2026-07-28 and supports form elicitation. Versions 2.1.295 and
@@ -136,7 +137,8 @@ Pairing code: ABCD-EFGH-IJKL-MNOP-QRST
   codes in an hour.
 - The pairing id after `--pair` is fixed now. Each new code has a new id, so use the line of
   the code that you give to machine A.
-- `courier status` shows the line again for each pairing on the answering side.
+- After machine A has joined, `courier status` shows the line again for each pairing on the
+  answering side. Before that, the pairing does not exist yet: keep the printed line.
 
 ## 5. Allow the key on machine B, with its forced command
 
@@ -161,8 +163,10 @@ ssh -F ~/.ssh/courier-b.config courier-b < /dev/null
 # {"error":"exchange failed"}
 ```
 
-If you see a shell prompt, a login message or `exchange: command not found`, the key has no
-forced command: correct the line in `authorized_keys`.
+If that JSON line does not appear, the key has no forced command: correct the line in
+`authorized_keys`. Without a forced command, ssh opens a shell that reads the empty input and
+exits, so you may see nothing at all, or only `Pseudo-terminal will not be allocated because
+stdin is not a terminal`.
 
 ## 6. Join (machine A)
 
@@ -208,7 +212,9 @@ the token out of your shell history, start the command with a space if your shel
 such lines (`HISTCONTROL=ignorespace` in bash, `setopt HIST_IGNORE_SPACE` in zsh).
 
 agent-courier keeps only a hash of the token. If you lose the token, remove the agent and add
-it again.
+it again. Removing an agent deletes its inbox, its allow list and its idempotency records, and
+its waiting messages do not go. After you add it again, run `courier allow` for it again on
+this machine.
 
 Then allow the two agents to talk. Both machines must allow:
 
@@ -278,24 +284,28 @@ cd ~/agent-courier && git pull && npm ci
 
 Then restart `courier serve`. Update both machines: the two must use the same exchange version.
 
+The line in `authorized_keys` holds the absolute paths of `node` and of the checkout. After you
+upgrade Node (with nvm, Homebrew or mise the path changes) or move the checkout, take the new
+line from `courier status` on machine B and replace the old one in `~/.ssh/authorized_keys`.
+
 ## Problems
 
-| What you see                                                              | Cause and fix                                                                                                                                                                         |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `courier: the ssh config names no IdentityFile for ...`                   | Add `IdentityFile ~/.ssh/courier-b` (the dedicated key) to the `Host` block in the config file of step 3                                                                              |
-| `courier: no state in ...: run courier init first`                        | The data directory is empty, or `COURIER_HOME` points to a different directory                                                                                                        |
-| `the port is in use: is courier serve already running?`                   | Another process uses the port. Stop the other `courier serve`, or init with a different `--port`                                                                                      |
-| `status` shows `last error: exited with 255`                              | ssh failed. Run the test in [step 5](#5-allow-the-key-on-machine-b-with-its-forced-command) and read the ssh message                                                                  |
-| `status` shows `last error: the other machine could not answer`           | The forced command ran but failed: wrong path or wrong `--pair` id in `authorized_keys` (after pairing again, use the new line), no state on machine B, or a different `COURIER_HOME` |
-| `status` shows `last error: timed out`                                    | Machine B did not answer in 30 seconds. Look at the network and at `sshd` on machine B                                                                                                |
-| `status` shows `the other machine no longer has this pairing: pair again` | Machine B revoked or paired again. Make a new code on machine B and join again                                                                                                        |
-| The agent gets `Refused: the pairing with ... is not on at both ends now` | Enable on both machines, and wait for one exchange (up to 20 seconds)                                                                                                                 |
-| `peer_status` shows `refused`, `that agent is not open to this one`       | The receiving machine does not allow the sender. Run `courier allow` there                                                                                                            |
-| Messages stay `queued`                                                    | The other side is paused, does not answer, or limits its inbox. `courier status` on both machines shows the reason. After 24 hours, messages expire                                   |
-| Claude Code shows `unauthorized` (401)                                    | The token is wrong, or the agent was removed. Add the agent again and run the new `claude mcp add`                                                                                    |
-| The agent gets `Denied: ... this client cannot ask (MCP elicitation)`     | The client cannot show approval questions. Use a client with elicitation, or turn on `courier auto-approve` for that agent                                                            |
-| `agy` gets `Not sent: the user did not approve.` without a question       | `agy` does not show agent-courier's approval question and declines it. Turn on `courier auto-approve` for that agent; `agy` then asks before each tool call itself                    |
-| `courier: .../state.json can be read by other users; run chmod 600 on it` | Someone changed the mode. Run `chmod 600` on the file (and `chmod 700` on the directory)                                                                                              |
-| `could not lock .../state.lock`                                           | Another process holds the lock for more than 5 seconds. A lock older than 10 seconds is taken over automatically                                                                      |
-
-| Claude Code shows the courier server as failed (`ECONNREFUSED`) after `courier serve` restarted | Claude Code does not reconnect by itself. Run `/mcp`, choose `courier`, then **Reconnect** |
+| What you see                                                                                    | Cause and fix                                                                                                                                                                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `courier: the ssh config names no IdentityFile for ...`                                         | Add `IdentityFile ~/.ssh/courier-b` (the dedicated key) to the `Host` block in the config file of step 3                                                                                                                                                                                                          |
+| `courier: no state in ...: run courier init first`                                              | The data directory is empty, or `COURIER_HOME` points to a different directory                                                                                                                                                                                                                                    |
+| `the port is in use: is courier serve already running?`                                         | Another process uses the port. Stop the other `courier serve` or free the port. The port is set once by `courier init`: running `init` again does not change it, and no command changes it. To use another port, start over in a new data directory (`COURIER_HOME`), which means pairing and adding agents again |
+| `status` shows `last error: exited with 255`                                                    | ssh failed. Run the test in [step 5](#5-allow-the-key-on-machine-b-with-its-forced-command) and read the ssh message                                                                                                                                                                                              |
+| `status` shows `last error: exited with` another number, such as 127 or 1                       | The forced command could not start: a wrong path in `authorized_keys`. 127 usually means the `node` path is wrong (for example after a Node upgrade), 1 the checkout path. Take the current line from `courier status` on machine B                                                                               |
+| `status` shows `last error: the other machine could not answer`                                 | The forced command ran and answered with an error: wrong `--pair` id in `authorized_keys` (after pairing again, use the new line), no state on machine B, or a different `COURIER_HOME`                                                                                                                           |
+| `status` shows `last error: timed out`                                                          | Machine B did not answer in 30 seconds. Look at the network and at `sshd` on machine B                                                                                                                                                                                                                            |
+| `status` shows `the other machine no longer has this pairing: pair again`                       | Machine B revoked or paired again. Make a new code on machine B and join again                                                                                                                                                                                                                                    |
+| The agent gets `Refused: the pairing with ... is not on at both ends now`                       | Enable on both machines, and wait for one exchange (up to 20 seconds)                                                                                                                                                                                                                                             |
+| `peer_status` shows `refused`, `that agent is not open to this one`                             | The receiving machine does not allow the sender. Run `courier allow` there                                                                                                                                                                                                                                        |
+| Messages stay `queued`                                                                          | The other side is paused, does not answer, or limits its inbox. `courier status` on both machines shows the reason. After 24 hours, messages expire                                                                                                                                                               |
+| Claude Code shows `unauthorized` (401)                                                          | The token is wrong, or the agent was removed. Add the agent again, run the new `claude mcp add`, and run `courier allow` for it again: removing an agent deleted its allow list and its inbox                                                                                                                     |
+| The agent gets `Denied: ... this client cannot ask (MCP elicitation)`                           | The client cannot show approval questions. Use a client with elicitation, or turn on `courier auto-approve` for that agent                                                                                                                                                                                        |
+| `agy` gets `Not sent: the user did not approve.` without a question                             | `agy` does not show agent-courier's approval question and declines it. Turn on `courier auto-approve` for that agent; `agy` then asks before each tool call itself                                                                                                                                                |
+| `courier: .../state.json can be read by other users; run chmod 600 on it`                       | Someone changed the mode. Run `chmod 600` on the file (and `chmod 700` on the directory)                                                                                                                                                                                                                          |
+| `could not lock .../state.lock`                                                                 | Another process held the lock for more than 5 seconds. A lock is taken over when its process is gone or it is older than 60 seconds; an empty or unreadable lock file, after 10 seconds                                                                                                                           |
+| Claude Code shows the courier server as failed (`ECONNREFUSED`) after `courier serve` restarted | Claude Code does not reconnect by itself. Run `/mcp`, choose `courier`, then **Reconnect**                                                                                                                                                                                                                        |
