@@ -5,6 +5,8 @@
   </picture>
 </p>
 
+<h1 align="center">agent-courier</h1>
+
 <p align="center">
   <b>Messages between Claude Code sessions on your own machines.</b><br>
   Over SSH, with your approval before each send. No third party in between.
@@ -56,9 +58,6 @@ No third party carries them.
   for one agent with `courier auto-approve`.
 - **Untrusted envelope.** Each incoming message comes in a JSON envelope with
   `untrusted: true` and the sender, as the other machine names it.
-- **Limits.** Text only, 8,000 characters or 12 KB. 30 messages an hour between two agents.
-  10 messages waiting per agent. 12 messages back and forth without your approval, then a stop.
-  Messages expire after 24 hours.
 - **No repeats.** Each send has an `idempotency_key`, so a retried call never sends twice.
   Delivery has receipts and retries, and the receiving side drops repeated messages.
 
@@ -74,11 +73,15 @@ The answer comes back into the session that asked:
 
 These are real screens from two machines on different Claude accounts, linked over SSH.
 
-## Quick start
+## Requirements
 
-You need Node 22.18 or later, Git, SSH from machine A to machine B, and on each machine a
-Claude Code that speaks MCP 2026-07-28 with form elicitation. Use 2.1.311 or later on any machine
-where you approve sends: 2.1.295 works but cuts long lines in the approval question.
+- Node 22.18 or later, Git and npm.
+- SSH from machine A to machine B: the OpenSSH client on machine A, the server on machine B.
+- On each machine, a Claude Code that speaks MCP 2026-07-28 with form elicitation. Use 2.1.311
+  or later on any machine where you approve sends: 2.1.295 works but cuts long lines in the
+  approval question.
+
+## Quick start
 
 ```bash
 # On both machines: install from a checkout (there is no npm package yet).
@@ -97,8 +100,25 @@ courier serve                              courier serve
 ```
 
 `courier agent add` prints a `claude mcp add` command. Run it where that Claude Code session
-works. The SSH key and its forced command need some steps first: refer to
+works. The SSH key and its forced command need some steps first: see
 [docs/setup.md](docs/setup.md).
+
+## Limits
+
+- Text only, 8,000 characters or 12 KB. 30 messages an hour between two agents. 10 messages
+  waiting per agent. 12 messages back and forth without your approval, then a stop. Messages
+  expire after 24 hours.
+- There is no npm package yet. Install from a checkout.
+- New messages are not pushed into a session. An agent reads them with `peer_inbox`.
+- SSH is the only transport.
+- A pairing joins two machines only. A machine can have up to 20 pairings, but a conversation
+  never spans more than two machines.
+- A message older than 24 hours or more than 5 minutes in the future is refused. Keep the
+  clocks of both machines correct.
+- On macOS, a Claude Code started in an SSH login cannot read the keychain. Start the sessions
+  that use agent-courier from a terminal on the machine itself.
+
+## Documentation
 
 | Document                                   | Contents                                                     |
 | ------------------------------------------ | ------------------------------------------------------------ |
@@ -108,16 +128,21 @@ works. The SSH key and its forced command need some steps first: refer to
 | [docs/development.md](docs/development.md) | Tasks, checking a change and the source layout               |
 | [docs/design.md](docs/design.md)           | Design decisions, the exchange protocol and the state file   |
 
-## Development
+The documents are in English only.
 
-```bash
-mise run check   # prettier, tsc and oxlint
-```
+## Security
+
+Use agent-courier only between machines that you control. For the full security model, see
+[docs/security.md](docs/security.md). To report a vulnerability, see [SECURITY.md](SECURITY.md).
+
+## Contributing
+
+To report a bug or send a change, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-MIT. Refer to [LICENSE](LICENSE).
+The code is under the [MIT License](LICENSE). The agent-courier logo isn't: see [BRAND.md](BRAND.md).
 
-The agent-courier logo (in this README and `docs/assets/logo/`) belongs to
-[V-AX](https://v-ax.com) and is **not** covered by the MIT License. Refer to
-[BRAND.md](BRAND.md).
+agent-courier is an independent project. It is not made by, affiliated with or endorsed by Anthropic. Claude and Claude Code are trademarks of Anthropic.
+
+Made by [V-AX](https://v-ax.com).

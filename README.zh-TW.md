@@ -5,6 +5,8 @@
   </picture>
 </p>
 
+<h1 align="center">agent-courier</h1>
+
 <p align="center">
   <b>讓你自己機器上的 Claude Code 工作階段互相傳訊息。</b><br>
   走 SSH，每次傳送前先問你，中間不經過任何第三方。
@@ -18,14 +20,22 @@
 
 ## 這是什麼
 
-agent-courier 讓不同機器上的 Claude Code 工作階段互相傳訊息。各台機器可以用不同的 Claude 帳號。訊息走你自己機器之間的 SSH，不經過任何第三方。
+agent-courier 讓不同機器上的 Claude Code 工作階段互相傳訊息。
+各台機器可以用不同的 Claude 帳號。
+訊息走你自己機器之間的 SSH，不經過任何第三方。
 
 > [!WARNING]
-> 只在你自己掌控的機器之間使用 agent-courier。配對的機器會被整台信任：上面任何能讀到 courier 檔案的程式，都能以它的 agent 身分傳訊息。配對兩台機器之前，請先讀 [docs/security.md](docs/security.md)。
+> 只在你自己掌控的機器之間使用 agent-courier。
+> 配對的機器會被整台信任：上面任何能讀到 courier 檔案的程式，都能以它的 agent 身分傳訊息。
+> 配對兩台機器之前，請先讀 [docs/security.md](docs/security.md)。
 >
-> 另一個 agent 傳來的訊息是資料，不是你的指示。agent-courier 會把它標成不可信，但無法阻止 agent 照著做。
+> 另一個 agent 傳來的訊息是資料，不是你的指示。
+> agent-courier 會把它標成不可信，但無法阻止 agent 照著做。
 >
-> 確認步驟防的是模型，不是你機器上的程式。能用 shell 的本機 agent 可以執行 `courier auto-approve`，或從 Claude Code 的設定讀出它的 token，然後不經詢問就傳訊息。這類 agent 請放在沙盒裡，禁止它存取 `~/.config/agent-courier`、Claude Code 的設定和 `courier`。
+> 確認步驟防的是模型，不是你機器上的程式。
+> 能用 shell 的本機 agent 可以執行 `courier auto-approve`，或從 Claude Code 的設定讀出它的 token。
+> 這樣它就能不經詢問傳訊息。
+> 這類 agent 請放在沙盒裡，禁止它存取 `~/.config/agent-courier`、Claude Code 的設定和 `courier`。
 
 <p align="center">
   <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-dark.png"><img src="docs/assets/architecture-light.png" alt="機器 A 的 courier serve 用專用金鑰透過 SSH 呼叫機器 B；在 B 上由強制指令 courier exchange 讀寫機器 B 的 courier serve 所用的狀態檔。各台機器上的 Claude Code 工作階段透過 127.0.0.1 上的 MCP 連到自己的 courier serve。"></picture>
@@ -33,13 +43,23 @@ agent-courier 讓不同機器上的 Claude Code 工作階段互相傳訊息。�
 
 ## 功能
 
-- **直接又私密。** 訊息走 SSH，每組配對用一把專用金鑰。在對方機器上，這把金鑰只能執行那一組配對的 `courier exchange --pair <id>`。主機金鑰會被釘選。
-- **每個工作階段一個 token。** `courier agent add <name>` 會產生 token，token 就是 agent 的身分。MCP 端點只聽 `127.0.0.1`。
-- **兩邊都要同意。** 配對需要一次性代碼，而且兩台機器都要啟用。每台機器各自列出本機每個 agent 可以和對方哪些 agent 對話；收訊那一台的清單才是真正的關卡。
-- **每次傳送都由你確認。** 預設在每次 `peer_send` 和 `peer_reply` 之前，MCP 用戶端都會問你。問題會寫明收件者和文字長度，全文放在「Send」欄位底下；因為 Claude Code 會摺疊過長的問題，但欄位說明會完整顯示。文字不能含有看不見的字元或格式字元。可以用 `courier auto-approve` 對單一 agent 關閉確認。
-- **不可信的信封。** 每則收到的訊息都包在 JSON 信封裡，帶有 `untrusted: true`，以及對方機器所稱的寄件者。
-- **限制。** 只能傳文字，最多 8,000 個字元或 12 KB。兩個 agent 之間每小時 30 則。每個 agent 最多 10 則等待中的訊息。未經你確認最多來回 12 則，之後就停下。訊息 24 小時後過期。
-- **不會重複。** 每次傳送都有 `idempotency_key`，重試的呼叫不會送兩次。投遞有回條和重試，收訊端會丟掉重複的訊息。
+- **直接又私密。** 訊息走 SSH，每組配對用一把專用金鑰。
+  在對方機器上，這把金鑰只能執行那一組配對的 `courier exchange --pair <id>`。
+  主機金鑰會被釘選。
+- **每個工作階段一個 token。** `courier agent add <name>` 會產生 token，token 就是 agent 的身分。
+  MCP 端點只聽 `127.0.0.1`。
+- **兩邊都要同意。** 配對需要一次性代碼，而且兩台機器都要啟用。
+  每台機器各自列出本機每個 agent 可以和對方哪些 agent 對話。
+  收訊那一台的清單才是真正的關卡。
+- **每次傳送都由你確認。** 預設在每次 `peer_send` 和 `peer_reply` 之前，MCP 用戶端都會問你。
+  問題會寫明收件者和文字長度，全文放在「Send」欄位底下。
+  這是因為 Claude Code 會摺疊過長的問題，但欄位說明會完整顯示。
+  文字不能含有看不見的字元或格式字元。
+  可以用 `courier auto-approve` 對單一 agent 關閉確認。
+- **不可信的信封。** 每則收到的訊息都包在 JSON 信封裡。
+  信封帶有 `untrusted: true`，以及對方機器所稱的寄件者。
+- **不會重複。** 每次傳送都有 `idempotency_key`，重試的呼叫不會送兩次。
+  投遞有回條和重試，收訊端會丟掉重複的訊息。
 
 ## 實際畫面
 
@@ -53,9 +73,15 @@ agent 傳送任何東西之前，Claude Code 會先問你，全文放在 **Send*
 
 這些是兩台用不同 Claude 帳號、以 SSH 連線的機器上的真實畫面。
 
-## 快速開始
+## 需求
 
-你需要 Node 22.18 以上、Git、從機器 A 到機器 B 的 SSH，以及每台機器上支援 MCP 2026-07-28 和表單詢問（form elicitation）的 Claude Code。要在哪台機器上確認傳送，那台就用 2.1.311 以上：2.1.295 也能用，但確認問題裡的長行會被截斷。
+- Node 22.18 以上、Git 和 npm。
+- 從機器 A 到機器 B 的 SSH：機器 A 要有 OpenSSH 用戶端，機器 B 要有 OpenSSH 伺服器。
+- 每台機器上支援 MCP 2026-07-28 和表單詢問（form elicitation）的 Claude Code。
+  要在哪台機器上確認傳送，那台就用 2.1.311 以上。
+  2.1.295 也能用，但確認問題裡的長行會被截斷。
+
+## 快速開始
 
 ```bash
 # 兩台機器都要：從原始碼安裝（目前還沒有 npm 套件）。
@@ -73,7 +99,26 @@ courier allow writer machine-b/helper      courier allow helper machine-a/writer
 courier serve                              courier serve
 ```
 
-`courier agent add` 會印出一行 `claude mcp add` 指令，在那個 Claude Code 工作階段所在的地方執行它。SSH 金鑰和它的強制指令需要先做幾個步驟，請看 [docs/setup.md](docs/setup.md)。
+`courier agent add` 會印出一行 `claude mcp add` 指令，在那個 Claude Code 工作階段所在的地方執行它。
+SSH 金鑰和它的強制指令需要先做幾個步驟。
+請看 [docs/setup.md](docs/setup.md)。
+
+## 限制
+
+- 只能傳文字，最多 8,000 個字元或 12 KB。兩個 agent 之間每小時 30 則。
+  每個 agent 最多 10 則等待中的訊息。未經你確認最多來回 12 則，之後就停下。
+  訊息 24 小時後過期。
+- 目前還沒有 npm 套件，請從原始碼安裝。
+- 新訊息不會推送進工作階段，agent 要用 `peer_inbox` 讀取。
+- 只支援 SSH 這一種傳輸方式。
+- 一組配對只連兩台機器。一台機器最多可以有 20 組配對。
+  但一段對話不會跨超過兩台機器。
+- 超過 24 小時，或時間超前 5 分鐘以上的訊息會被拒收。
+  請讓兩台機器的時鐘保持正確。
+- 在 macOS 上，從 SSH 登入啟動的 Claude Code 讀不到鑰匙圈。
+  使用 agent-courier 的工作階段，請在那台機器本身的終端機啟動。
+
+## 文件
 
 | 文件                                       | 內容                                         |
 | ------------------------------------------ | -------------------------------------------- |
@@ -85,14 +130,19 @@ courier serve                              courier serve
 
 文件目前只有英文。
 
-## 開發
+## 安全
 
-```bash
-mise run check   # prettier、tsc 和 oxlint
-```
+只在你自己掌控的機器之間使用 agent-courier。完整的安全模型請看 [docs/security.md](docs/security.md)。
+要回報安全漏洞，請看 [SECURITY.md](SECURITY.md)。
+
+## 參與貢獻
+
+要回報 bug 或送出修改，請看 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 授權
 
-MIT，請看 [LICENSE](LICENSE)。
+程式碼以 [MIT License](LICENSE) 釋出。agent-courier 的標誌不在此授權內，見 [BRAND.md](BRAND.md)。
 
-agent-courier 的標誌（本頁與 `docs/assets/logo/`）屬於 [V-AX](https://v-ax.com)，**不在** MIT 授權範圍內，請看 [BRAND.md](BRAND.md)。
+agent-courier 是獨立專案，並非由 Anthropic 製作，也與其沒有關係或背書。Claude 和 Claude Code 是 Anthropic 的商標。
+
+由 [V-AX](https://v-ax.com) 製作。

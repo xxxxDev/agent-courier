@@ -85,7 +85,7 @@ programs that run as your own user on the same machine: refer to
 
 | Secret                           | Location                                                     | Mode         | Notes                                                                                                                                                      |
 | -------------------------------- | ------------------------------------------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Agent token                      | Shown once by `courier agent add`                            | —            | Not stored by agent-courier. A program with it is that agent and can answer its approval questions                                                         |
+| Agent token                      | Shown once by `courier agent add`                            | None         | Not stored by agent-courier. A program with it is that agent and can answer its approval questions                                                         |
 | Copy of the agent token          | Claude Code's configuration, written by `claude mcp add`     | The client's | With the default (local) scope, it is in `~/.claude.json`. Do not use `--scope project`: it writes `.mcp.json` into the project, which can be committed    |
 | Copy in shell history            | Your shell's history file, if you ran `claude mcp add` there | The shell's  | Run the command with a leading space when your shell ignores those (`HISTCONTROL=ignorespace`), or remove the line afterwards                              |
 | Token hashes, pairings, messages | `~/.config/agent-courier/state.json`                         | 0600         | Holds the text of messages for 7 days. A program that can write it can act as any agent                                                                    |
@@ -93,7 +93,7 @@ programs that run as your own user on the same machine: refer to
 | Dedicated SSH private key        | Machine A, for example `~/.ssh/courier-b`                    | 0600         | With it, a program can exchange for that one pairing: deliver to machine B's agents that allow machine A's agents, and take what they queued for machine A |
 | Pinned host key                  | Machine A, for example `~/.ssh/known_hosts_courier`          | 0644         | Not secret, but its integrity matters                                                                                                                      |
 | Forced-command line              | Machine B, `~/.ssh/authorized_keys`                          | 0600         | Names one pairing. Remove the line to revoke the key                                                                                                       |
-| Pairing code                     | Shown once by `courier pair`                                 | —            | Stored only as a hash. One use, 10 minutes                                                                                                                 |
+| Pairing code                     | Shown once by `courier pair`                                 | None         | Stored only as a hash. One use, 10 minutes                                                                                                                 |
 
 agent-courier reads `state.json` only if all these conditions are true:
 
@@ -170,3 +170,5 @@ These are the limits of what agent-courier can do. Plan for them.
   machine which local agents are open to it and whom they allow.
 - **Clocks.** A message older than 24 hours or more than 5 minutes in the future is refused.
   Keep the clocks of both machines correct.
+
+To report a vulnerability, see [SECURITY.md](../SECURITY.md).
