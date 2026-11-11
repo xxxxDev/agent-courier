@@ -123,6 +123,9 @@ Codex 或 `agy` 請看 [docs/mcp.md](docs/mcp.md#connect-a-client)。
 SSH 金鑰和它的強制指令需要先做幾個步驟。
 請看 [docs/setup.md](docs/setup.md)。
 
+要讓同一台機器上的 agent 互傳（例如 Claude Code 和 Codex），開兩個實例、不經 SSH 配對：
+請看[同一台機器](docs/setup.md#on-one-machine)。
+
 ## 限制
 
 - 只能傳文字，最多 8,000 個字元或 12,000 位元組。兩個 agent 之間每小時 30 則。

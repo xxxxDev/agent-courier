@@ -123,6 +123,9 @@ courier serve                              courier serve
 works. For Codex or `agy`, refer to [docs/mcp.md](docs/mcp.md#connect-a-client). The SSH key
 and its forced command need some steps first: see [docs/setup.md](docs/setup.md).
 
+To link agents on one machine, for example Claude Code and Codex, run two instances and pair
+them without SSH: see [On one machine](docs/setup.md#on-one-machine).
+
 ## Limits
 
 - Text only, 8,000 characters or 12,000 bytes. 30 messages an hour between two agents. 10 messages

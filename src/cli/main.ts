@@ -27,6 +27,8 @@ Usage:
   courier pair [--name <label>]                    make a one-time pairing code (answering machine)
   courier join <code> --name <label> --ssh-host <alias> --ssh-config <file>
                                                    pair with the machine that made the code
+  courier join <code> --name <label> --command '<JSON array>'
+                                                   pair with a second instance on this machine
   courier enable <machine>                         let messages flow (both machines must enable)
   courier pause <machine>                          stop; what waited will not go
   courier revoke <machine>                         unpair; what waited will not go

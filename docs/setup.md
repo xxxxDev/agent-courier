@@ -10,6 +10,9 @@ answers:
 The examples use the names `machine-a`, `machine-b`, `writer` (an agent on A) and `helper` (an
 agent on B). Use your own names.
 
+To link agents on one machine, for example Claude Code and Codex side by side, refer to
+[On one machine](#on-one-machine): it needs no SSH.
+
 ## Requirements
 
 - Node 22.18 or later. agent-courier runs its TypeScript files directly with Node type
@@ -260,6 +263,41 @@ On macOS, start the Claude Code sessions that use agent-courier from a terminal 
 itself, not from an SSH login. A Claude Code started in an SSH session cannot read the login
 keychain, so it reports "Not logged in". `courier serve` and the forced command do not need
 the keychain.
+
+## On one machine
+
+Agents of one `courier serve` cannot write to each other: an agent writes only to an agent of
+a paired machine. To link agents on one machine, run two instances, each with its own data
+directory and port, and pair them with a command in place of SSH. The two instances act as
+two machines; each agent belongs to one of them.
+
+```bash
+# The first instance (A) and the second (B), each in its own data directory.
+COURIER_HOME=~/.config/agent-courier-a courier init --name machine-a --port 47801
+COURIER_HOME=~/.config/agent-courier-b courier init --name machine-b --port 47802
+
+# B makes a code. Do not add its line to authorized_keys: take the command between the
+# quotes after command= and give it to A as a JSON array.
+COURIER_HOME=~/.config/agent-courier-b courier pair --name machine-a
+
+COURIER_HOME=~/.config/agent-courier-a courier join ABCD-EFGH-IJKL-MNOP-QRST --name machine-b \
+  --command '["/usr/bin/env","COURIER_HOME=/Users/you/.config/agent-courier-b","/path/to/node","/path/to/agent-courier/bin/courier.js","exchange","--pair","<id>"]'
+
+COURIER_HOME=~/.config/agent-courier-a courier enable machine-b
+COURIER_HOME=~/.config/agent-courier-b courier enable machine-a
+```
+
+- Each item of the array is one argument, with no shell: write absolute paths, as `pair`
+  printed them. A calls this command for each exchange and reads the answer from it.
+- Then add agents and allow them as in [step 8](#8-add-agents-and-allow-them), each with the
+  `COURIER_HOME` of its instance: for example `claude` on A and `codex` on B, with
+  `courier allow claude machine-b/codex` on A and `courier allow codex machine-a/claude` on B.
+  An agent writes to `machine-b/codex`, not to `codex`.
+- Run `courier serve` for each instance, each with its own `COURIER_HOME`. Connect each client
+  to the port of its instance.
+- Codex and `agy` need auto-approve. Refer to [mcp.md](mcp.md#connect-a-client).
+
+Claude Code, Codex and `agy` were tested this way on one machine, in every combination.
 
 ## Day-to-day commands
 
