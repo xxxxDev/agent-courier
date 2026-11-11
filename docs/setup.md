@@ -10,7 +10,7 @@ answers:
 The examples use the names `machine-a`, `machine-b`, `writer` (an agent on A) and `helper` (an
 agent on B). Use your own names.
 
-To link agents on one machine, for example Claude Code and Codex side by side, refer to
+To link agents on one machine, for example Claude Code and Codex CLI side by side, refer to
 [On one machine](#on-one-machine): it needs no SSH.
 
 ## Requirements
@@ -22,8 +22,8 @@ To link agents on one machine, for example Claude Code and Codex side by side, r
 - OpenSSH: the client on machine A, the server on machine B.
 - Claude Code that speaks MCP 2026-07-28 and supports form elicitation. Versions 2.1.295 and
   2.1.311 were tested; approve sends in 2.1.311 or later, because 2.1.295 cuts long lines in the
-  approval question. Codex and `agy` can connect too, but they do not show agent-courier's
-  approval question, so they send only with auto-approve on. Refer to
+  approval question. Codex CLI and Antigravity CLI can connect too, but they do not show
+  agent-courier's approval question, so they send only with auto-approve on. Refer to
   [mcp.md](mcp.md#connect-a-client).
 
 ## Install
@@ -194,16 +194,16 @@ of the other at the next exchange.
 
 ## 8. Add agents and allow them
 
-Each session that uses agent-courier (Claude Code, Codex or `agy`) is one agent. Add an agent
-on each machine:
+Each session that uses agent-courier (Claude Code, Codex CLI or Antigravity CLI) is one agent.
+Add an agent on each machine:
 
 ```bash
 courier agent add writer    # on machine A
 courier agent add helper    # on machine B
 ```
 
-The command shows the token one time and a `claude mcp add` command (for Codex or `agy`, refer
-to [mcp.md](mcp.md#connect-a-client)), for example:
+The command shows the token one time and a `claude mcp add` command (for Codex CLI or
+Antigravity CLI, refer to [mcp.md](mcp.md#connect-a-client)), for example:
 
 ```bash
 claude mcp add --transport http courier http://127.0.0.1:47800/mcp --header "Authorization: Bearer cour_..."
@@ -299,9 +299,10 @@ COURIER_HOME=~/.config/agent-courier-b courier enable machine-a
   An agent writes to `machine-b/codex`, not to `codex`.
 - Run `courier serve` for each instance, each with its own `COURIER_HOME`. Connect each client
   to the port of its instance.
-- Codex and `agy` need auto-approve. Refer to [mcp.md](mcp.md#connect-a-client).
+- Codex CLI and Antigravity CLI need auto-approve. Refer to [mcp.md](mcp.md#connect-a-client).
 
-Claude Code, Codex and `agy` were tested this way on one machine, in every combination.
+Claude Code, Codex CLI and Antigravity CLI were tested this way on one machine, in every
+combination.
 
 ## Day-to-day commands
 
@@ -354,7 +355,7 @@ both again. Messages that waited for the old pairing do not go.
 | Messages stay `queued`                                                                          | The other side is paused, does not answer, or limits its inbox. `courier status` on both machines shows the reason. After 24 hours, messages expire                                                                                                                                                               |
 | Claude Code shows `unauthorized` (401)                                                          | The token is wrong, or the agent was removed. Add the agent again, run the new `claude mcp add`, and run `courier allow` for it again: removing an agent deleted its allow list and its inbox                                                                                                                     |
 | The agent gets `Denied: ... this client cannot ask (MCP elicitation)`                           | The client cannot show approval questions. Use a client with elicitation, or turn on `courier auto-approve` for that agent                                                                                                                                                                                        |
-| `agy` gets `Not sent: the user did not approve.` without a question                             | `agy` does not show agent-courier's approval question and declines it. Turn on `courier auto-approve` for that agent; `agy` then asks before each tool call itself                                                                                                                                                |
+| Antigravity CLI gets `Not sent: the user did not approve.` without a question                   | Antigravity CLI does not show agent-courier's approval question and declines it. Turn on `courier auto-approve` for that agent; Antigravity CLI then asks before each tool call itself                                                                                                                            |
 | `courier: .../state.json can be read by other users; run chmod 600 on it`                       | Someone changed the mode. Run `chmod 600` on the file (and `chmod 700` on the directory)                                                                                                                                                                                                                          |
 | `could not lock .../state.lock`                                                                 | Another process held the lock for more than 5 seconds. A lock is taken over when its process is gone or it is older than 60 seconds; an empty or unreadable lock file, after 10 seconds                                                                                                                           |
 | Claude Code shows the courier server as failed (`ECONNREFUSED`) after `courier serve` restarted | Claude Code does not reconnect by itself. Run `/mcp`, choose `courier`, then **Reconnect**                                                                                                                                                                                                                        |

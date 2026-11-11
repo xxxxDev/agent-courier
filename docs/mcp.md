@@ -2,7 +2,7 @@
 
 The MCP endpoint is `http://127.0.0.1:<port>/mcp` (port 47800 by default). It uses Streamable
 HTTP. One `courier serve` gives the endpoint to all the agent sessions on its machine: Claude
-Code, and other MCP clients such as Codex and `agy`.
+Code, and other MCP clients such as Codex CLI and Antigravity CLI.
 The bearer token of a request tells the endpoint which agent the session is.
 
 ## Protocol
@@ -13,7 +13,7 @@ with `input_required`. The client asks you, then sends the call again with your 
 
 To approve sends, the client must speak MCP 2026-07-28 and support form elicitation. The
 endpoint also serves clients that speak an older version (2025-11-25 and earlier), such as
-Codex, without a session. All tools work, but such a client can never be asked: each send is
+Codex CLI, without a session. All tools work, but such a client can never be asked: each send is
 refused unless auto-approve is on for that agent (see [Auto-approve](#auto-approve)).
 
 ### Clients
@@ -23,14 +23,15 @@ Only what was tested is listed.
 | Client and tested versions            | MCP version | Shows agent-courier's question                         | Auto-approve | Its own question before a call | Run without a screen                                                                                                                                  | Token kept in                                                      |
 | ------------------------------------- | ----------- | ------------------------------------------------------ | ------------ | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | Claude Code 2.1.295, 2.1.311, 2.1.322 | 2026-07-28  | Yes, with the whole text under Send                    | Not needed   | None                           | `claude -p` cannot answer, so the send is refused; with auto-approve on, it goes without anyone seeing it                                             | Its configuration, `~/.claude.json` with the default (local) scope |
-| Codex 0.167.1                         | 2025-06-18  | No: the send is refused ("this client cannot ask")     | Needed       | Recipient and text             | `codex exec` blocks the send unless `default_tools_approval_mode = "approve"`; with that and auto-approve on, nobody sees the message                 | The environment variable named in `bearer_token_env_var`           |
-| `agy` 1.5.5                           | 2026-07-28  | No: it declines at once, in its interactive screen too | Needed       | Tool name only                 | `agy -p` denies the tool call itself, so nothing is sent; with `--dangerously-skip-permissions` and auto-approve on, it goes without anyone seeing it | `~/.gemini/config/mcp_config.json`                                 |
+| Codex CLI 0.167.1                     | 2025-06-18  | No: the send is refused ("this client cannot ask")     | Needed       | Recipient and text             | `codex exec` blocks the send unless `default_tools_approval_mode = "approve"`; with that and auto-approve on, nobody sees the message                 | The environment variable named in `bearer_token_env_var`           |
+| Antigravity CLI 1.5.5                 | 2026-07-28  | No: it declines at once, in its interactive screen too | Needed       | Tool name only                 | `agy -p` denies the tool call itself, so nothing is sent; with `--dangerously-skip-permissions` and auto-approve on, it goes without anyone seeing it | `~/.gemini/config/mcp_config.json`                                 |
 
 On one machine, these three were tested in every combination, the same client on both sides
 included: each sent to and answered each of the three, with auto-approve on. Between two
-machines (macOS on Apple silicon and on Intel, over SSH), Claude Code, Codex and `agy` on one
-each sent to Codex and `agy` on the other, and each reply came back. Claude Code showing
-agent-courier's question was tested between two machines with 2.1.295 and 2.1.311.
+machines (macOS on Apple silicon and on Intel, over SSH), Claude Code, Codex CLI and
+Antigravity CLI on one each sent to Codex CLI and Antigravity CLI on the other, and each reply
+came back. Claude Code showing agent-courier's question was tested between two machines with
+2.1.295 and 2.1.311.
 
 How the approval question looks depends on the client version:
 
@@ -62,7 +63,7 @@ claude mcp add --transport http courier http://127.0.0.1:47800/mcp \
 - Claude Code keeps the header, with the token, in its configuration. Do not let other persons
   read that file.
 
-### Codex
+### Codex CLI
 
 Add the server to `~/.codex/config.toml` and keep the token in an environment variable:
 
@@ -75,19 +76,19 @@ bearer_token_env_var = "COURIER_TOKEN"
 exclude = ["COURIER_TOKEN"]
 ```
 
-- Codex cannot show agent-courier's question, so turn on `courier auto-approve` for its agent.
-- In its interactive screen, Codex 0.167.1 asks before each call and shows the recipient and
+- Codex CLI cannot show agent-courier's question, so turn on `courier auto-approve` for its agent.
+- In its interactive screen, Codex CLI 0.167.1 asks before each call and shows the recipient and
   the text. Allow sends the message; Cancel sends nothing. With auto-approve on, that question
   is the only check by a person.
 - In `codex exec`, sends are blocked unless you set `default_tools_approval_mode = "approve"`
   in the `mcp_servers.courier` section. With that setting and auto-approve on, no person sees a
   message before it goes.
-- Codex passes its environment to the shell commands it runs, so an agent could read the token
-  and use it to answer its own approval questions. The `shell_environment_policy` lines above
-  hide it (tested with Codex 0.167.1). Set the variable only where Codex starts, not in a file
-  the agent can read, such as `~/.zshrc`.
+- Codex CLI passes its environment to the shell commands it runs, so an agent could read the
+  token and use it to answer its own approval questions. The `shell_environment_policy` lines
+  above hide it (tested with Codex CLI 0.167.1). Set the variable only where Codex CLI starts,
+  not in a file the agent can read, such as `~/.zshrc`.
 
-### agy
+### Antigravity CLI
 
 Add the server with its own command:
 
@@ -95,11 +96,11 @@ Add the server with its own command:
 agy mcp add --header "Authorization: Bearer cour_..." courier http://127.0.0.1:47800/mcp
 ```
 
-- `agy` 1.5.5 keeps the header, with the token, in `~/.gemini/config/mcp_config.json`.
-- `agy` does not show agent-courier's question: it declines it, so nothing is sent. Turn on
-  `courier auto-approve` for its agent.
-- `agy` then asks "Allow calling this tool?" before each call, with the tool name but not the
-  text. Allowing sends the message; denying sends nothing.
+- Antigravity CLI 1.5.5 keeps the header, with the token, in `~/.gemini/config/mcp_config.json`.
+- Antigravity CLI does not show agent-courier's question: it declines it, so nothing is sent.
+  Turn on `courier auto-approve` for its agent.
+- Antigravity CLI then asks "Allow calling this tool?" before each call, with the tool name but
+  not the text. Allowing sends the message; denying sends nothing.
 - `agy -p` cannot ask, so it denies the call itself and nothing is sent. With
   `--dangerously-skip-permissions` and auto-approve on, no person sees a message before it goes.
 
@@ -304,9 +305,9 @@ after 12 messages back and forth with one agent without an approval, the next se
 again. Your approval starts the count again. The receiving machine keeps its own count (see
 [Approvals](#approvals)).
 
-A client that cannot ask, such as Codex or `agy`, has its sends refused at the limit. To start
-the count again, approve one send for that agent from a client that can ask, such as Claude
-Code with the same token.
+A client that cannot ask, such as Codex CLI or Antigravity CLI, has its sends refused at the
+limit. To start the count again, approve one send for that agent from a client that can ask,
+such as Claude Code with the same token.
 
 ## Idempotency
 

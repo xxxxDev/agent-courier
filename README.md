@@ -21,7 +21,7 @@
 ## What it is
 
 agent-courier lets AI agent sessions on different machines send messages to each other: Claude
-Code, Codex and the Antigravity CLI (`agy`). The machines can use different accounts. The
+Code, Codex CLI and the Antigravity CLI (`agy`). The machines can use different accounts. The
 messages go over SSH between your own machines. No third party carries them.
 
 How each client asks you before a send differs. Refer to [Requirements](#requirements).
@@ -76,12 +76,12 @@ The answer comes back into the session that asked:
 
 These are real screens from two machines on different Claude accounts, linked over SSH.
 
-Codex and `agy` do not show that question. With auto-approve on for their agents, each asks
-you itself before the call, in its interactive screen. Codex shows the recipient and the text:
+Codex CLI and Antigravity CLI do not show that question. With auto-approve on, each asks you
+itself before the call, in its interactive screen. Codex CLI shows the recipient and the text:
 
-<p align="center"><img src="docs/assets/codex-approval.png" alt="Codex asks: Allow the courier MCP server to run tool peer_send? It lists the idempotency key, the text and the recipient machine-b/helper, with Allow and Cancel" width="760"></p>
+<p align="center"><img src="docs/assets/codex-approval.png" alt="Codex CLI asks: Allow the courier MCP server to run tool peer_send? It lists the idempotency key, the text and the recipient machine-b/helper, with Allow and Cancel" width="760"></p>
 
-`agy` shows only the tool name:
+Antigravity CLI shows only the tool name:
 
 <p align="center"><img src="docs/assets/agy-approval.png" alt="The Antigravity CLI asks: Allow calling this tool? for courier/peer_send, with options to allow or deny" width="760"></p>
 
@@ -95,11 +95,11 @@ These two are real screens from one machine.
 - If you use Claude Code: a version that speaks MCP 2026-07-28 with form elicitation. Use 2.1.311
   or later on any machine where you approve sends: 2.1.295 works but cuts long lines in the
   approval question.
-- Codex 0.167.1 and `agy` 1.5.5 can connect too, on one machine and between two. Neither shows
-  agent-courier's approval question, so turn on `courier auto-approve` for their agents. In its
-  interactive screen, each then asks you itself before it calls a tool, and Codex shows the text.
-  Run without a screen and with their own approvals turned off, they send unseen.
-  Refer to [docs/mcp.md](docs/mcp.md#connect-a-client).
+- Codex CLI 0.167.1 and Antigravity CLI 1.5.5 can connect too, on one machine and between two.
+  Neither shows agent-courier's approval question, so turn on `courier auto-approve` for their
+  agents. In its interactive screen, each then asks you itself before it calls a tool, and
+  Codex CLI shows the text. Run without a screen and with their own approvals turned off, they
+  send unseen. Refer to [docs/mcp.md](docs/mcp.md#connect-a-client).
 
 ## Quick start
 
@@ -120,10 +120,10 @@ courier serve                              courier serve
 ```
 
 `courier agent add` prints a `claude mcp add` command. Run it where that Claude Code session
-works. For Codex or `agy`, refer to [docs/mcp.md](docs/mcp.md#connect-a-client). The SSH key
-and its forced command need some steps first: see [docs/setup.md](docs/setup.md).
+works. For Codex CLI or Antigravity CLI, refer to [docs/mcp.md](docs/mcp.md#connect-a-client).
+The SSH key and its forced command need some steps first: see [docs/setup.md](docs/setup.md).
 
-To link agents on one machine, for example Claude Code and Codex, run two instances and pair
+To link agents on one machine, for example Claude Code and Codex CLI, run two instances and pair
 them without SSH: see [On one machine](docs/setup.md#on-one-machine).
 
 ## Limits

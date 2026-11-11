@@ -21,7 +21,7 @@
 ## 這是什麼
 
 agent-courier 讓不同機器上的 AI agent 工作階段互相傳訊息：
-Claude Code、Codex 和 Antigravity CLI（`agy`）都可以。各台機器可以用不同帳號。
+Claude Code、Codex CLI 和 Antigravity CLI（`agy`）都可以。各台機器可以用不同帳號。
 訊息走你自己機器之間的 SSH，不經過任何第三方。
 
 各用戶端在傳送前怎麼問你不太一樣，請看[需求](#需求)。
@@ -75,12 +75,12 @@ agent 傳送任何東西之前，Claude Code 會先問你，全文放在 **Send*
 
 這些是兩台用不同 Claude 帳號、以 SSH 連線的機器上的真實畫面。
 
-Codex 和 `agy` 不會顯示這個問題。對它們的 agent 開了自動核准之後，
-它們會在互動介面裡、呼叫前自己問你。Codex 會列出收件者和訊息內容：
+Codex CLI 和 Antigravity CLI 不會顯示這個問題。對它們的 agent 開了自動核准之後，
+它們會在互動介面裡、呼叫前自己問你。Codex CLI 會列出收件者和訊息內容：
 
-<p align="center"><img src="docs/assets/codex-approval.png" alt="Codex 詢問：要允許 courier MCP 伺服器執行 peer_send 嗎？列出 idempotency key、訊息內容和收件者 machine-b/helper，並有 Allow 和 Cancel" width="760"></p>
+<p align="center"><img src="docs/assets/codex-approval.png" alt="Codex CLI 詢問：要允許 courier MCP 伺服器執行 peer_send 嗎？列出 idempotency key、訊息內容和收件者 machine-b/helper，並有 Allow 和 Cancel" width="760"></p>
 
-`agy` 只顯示工具名稱：
+Antigravity CLI 只顯示工具名稱：
 
 <p align="center"><img src="docs/assets/agy-approval.png" alt="Antigravity CLI 詢問：要允許呼叫 courier/peer_send 這個工具嗎？並有允許和拒絕的選項" width="760"></p>
 
@@ -94,9 +94,9 @@ Codex 和 `agy` 不會顯示這個問題。對它們的 agent 開了自動核准
 - 如果用 Claude Code：要支援 MCP 2026-07-28 和表單詢問（form elicitation）的版本。
   要在哪台機器上確認傳送，那台就用 2.1.311 以上。
   2.1.295 也能用，但確認問題裡的長行會被截斷。
-- Codex 0.167.1 和 `agy` 1.5.5 也能連上，單機和跨機都測過。兩者都不會顯示
+- Codex CLI 0.167.1 和 Antigravity CLI 1.5.5 也能連上，單機和跨機都測過。兩者都不會顯示
   agent-courier 的確認問題，所以要對它們的 agent 開 `courier auto-approve`。
-  開了之後，在互動介面裡它們呼叫工具前會自己問你，Codex 還會顯示訊息內容。
+  開了之後，在互動介面裡它們呼叫工具前會自己問你，Codex CLI 還會顯示訊息內容。
   無介面執行、又關掉它們自己的核准時，訊息會在沒人看過的情況下送出。
   請看 [docs/mcp.md](docs/mcp.md#connect-a-client)。
 
@@ -119,11 +119,11 @@ courier serve                              courier serve
 ```
 
 `courier agent add` 會印出一行 `claude mcp add` 指令，在那個 Claude Code 工作階段所在的地方執行它。
-Codex 或 `agy` 請看 [docs/mcp.md](docs/mcp.md#connect-a-client)。
+Codex CLI 或 Antigravity CLI 請看 [docs/mcp.md](docs/mcp.md#connect-a-client)。
 SSH 金鑰和它的強制指令需要先做幾個步驟。
 請看 [docs/setup.md](docs/setup.md)。
 
-要讓同一台機器上的 agent 互傳（例如 Claude Code 和 Codex），開兩個實例、不經 SSH 配對：
+要讓同一台機器上的 agent 互傳（例如 Claude Code 和 Codex CLI），開兩個實例、不經 SSH 配對：
 請看[同一台機器](docs/setup.md#on-one-machine)。
 
 ## 限制
