@@ -3,6 +3,7 @@
 import { CourierError } from "../core/errors.ts";
 import { dataDir, StateError, Store } from "../core/state.ts";
 import { UnsafeFileError } from "../core/files.ts";
+import { LockTimeoutError } from "../core/lock.ts";
 import { startService } from "../service/serve.ts";
 import * as cmd from "./commands.ts";
 import { FAILED, runExchange } from "./exchange.ts";
@@ -126,7 +127,11 @@ export async function main(
       console.error(`courier: ${err.message}`);
       return EXIT[err.kind] ?? 1;
     }
-    if (err instanceof StateError || err instanceof UnsafeFileError) {
+    if (
+      err instanceof StateError ||
+      err instanceof UnsafeFileError ||
+      err instanceof LockTimeoutError
+    ) {
       console.error(`courier: ${err.message}`);
       return 1;
     }
