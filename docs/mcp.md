@@ -334,7 +334,9 @@ Code with the same token.
 | Request body                                | 128 KB                         | MCP endpoint         |
 
 When the receiving machine refuses for now (rate, unread, loop), the message stays `queued`
-with a `reason` and goes again later. After 24 hours it expires.
+with a `reason` and goes again later, after the messages that were not refused, so it does not
+hold them back. Messages from one agent to the same agent keep their order. After 24 hours it
+expires. One exchange carries at most 100 messages and 190 KB.
 
 ## Errors
 

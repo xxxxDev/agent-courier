@@ -113,7 +113,13 @@ The envelope (version 1):
 - **Binding.** The forced command is `courier exchange --pair <id>`. It refuses a pair
   request unless the open code was made for that id, and an envelope for any other pairing.
 - **Budget.** Items fill an envelope only up to 190 KB in all, after the directory, the acks
-  and the refusals. The answer is checked against 256 KB before the state is written.
+  and the refusals, and at most 100 items. The answer is checked against 256 KB before the
+  state is written.
+- **Order.** Items go oldest first, but those the other side refused for now (rate, unread,
+  loop) go after the others, so they cannot hold back the rest of the queue; with room left
+  they are tried again in the same round. Between one local agent and one remote agent the
+  order stays: once one of theirs is deferred, or does not fit this round, the later ones wait
+  behind it. The wire format does not change, so machines on the two versions still exchange.
 - **Failure.** The forced command prints `{"error":"exchange failed"}` for every failure
   (including a request not complete within 20 seconds), normally writes no state, and the
   caller counts the call as failed. The one exception is a write that is in place but whose

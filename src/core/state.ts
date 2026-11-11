@@ -101,6 +101,8 @@ export interface OutMsg {
   leaseUntil?: number;
   /** Handed to the other machine at least once: it may have arrived. */
   handed?: boolean;
+  /** The other machine refused it for now at the last try: it goes after the others. */
+  deferred?: boolean;
   approved: boolean;
 }
 

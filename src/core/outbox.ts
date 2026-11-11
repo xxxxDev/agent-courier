@@ -96,10 +96,18 @@ export const toWire = (m: OutMsg): WireItem => ({
   text: m.text,
 });
 
+/** One local agent to one remote agent: their messages keep their order. */
+const orderKey = (m: OutMsg) => `${m.agent}\u0000${m.to}`;
+
 /**
  * What goes out now for this pairing, up to `budget` bytes and MAX_ITEMS items (the other
  * side refuses a bigger envelope), each leased for LEASE_MS. One that may no longer go (the
  * agent gone, the allow taken back) is abandoned.
+ *
+ * Order: messages the other side refused for now go after the others, so they cannot hold
+ * back the rest of the queue; with room left they are tried again in the same round.
+ * Between one local agent and one remote agent the order stays: once one of theirs is
+ * deferred, or does not fit this round, the later ones wait behind it.
  */
 export function collect(
   s: State,
@@ -108,8 +116,9 @@ export function collect(
   budget = BATCH_BYTES,
 ): WireItem[] {
   expireOut(s, now);
-  const items: WireItem[] = [];
-  let bytes = 2;
+  const ready: OutMsg[] = [];
+  const later: OutMsg[] = [];
+  const deferredKeys = new Set<string>();
   for (const m of s.outbox) {
     if (
       m.pairId !== pairId ||
@@ -122,13 +131,26 @@ export function collect(
       abandon(m, "the agent was closed to that agent", now);
       continue;
     }
+    if (m.deferred || deferredKeys.has(orderKey(m))) {
+      deferredKeys.add(orderKey(m));
+      later.push(m);
+    } else ready.push(m);
+  }
+  const items: WireItem[] = [];
+  const held = new Set<string>();
+  let bytes = 2;
+  for (const m of [...ready, ...later]) {
+    if (held.has(orderKey(m))) continue;
     const it = toWire(m);
     const size = Buffer.byteLength(JSON.stringify(it)) + 1;
     if (size > ITEM_BYTES) {
       settleOut(m, "refused", "too large to send", now);
       continue;
     }
-    if (bytes + size > budget || items.length >= MAX_ITEMS) continue;
+    if (bytes + size > budget || items.length >= MAX_ITEMS) {
+      held.add(orderKey(m));
+      continue;
+    }
     bytes += size;
     m.leaseUntil = now + LEASE_MS;
     m.handed = true;
@@ -153,6 +175,7 @@ export function settleReceipts(
     else if (r.retry) {
       if (m.status === "in-flight") continue;
       delete m.leaseUntil;
+      m.deferred = true;
       m.reason = remoteReason(r.code);
     } else settleOut(m, "refused", remoteReason(r.code), now);
   }
