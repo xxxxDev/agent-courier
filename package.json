@@ -1,6 +1,6 @@
 {
   "name": "agent-courier",
-  "version": "0.1.0",
+  "version": "2026.11.11",
   "description": "Messages between Claude Code sessions on your own machines, over SSH, with no third party",
   "license": "MIT",
   "private": true,

@@ -9,7 +9,7 @@ import { FAILED, runExchange } from "./exchange.ts";
 import { UUID } from "../core/ids.ts";
 import { UsageError } from "./args.ts";
 
-export const VERSION = "0.1.0";
+export const VERSION = "2026.11.11";
 
 export const HELP = `courier ${VERSION}: messages between Claude Code sessions on your own machines, over SSH
 

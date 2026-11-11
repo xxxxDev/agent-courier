@@ -396,7 +396,7 @@ export const INSTRUCTIONS =
 
 export function buildServer(deps: ToolDeps, agentName: string): McpServer {
   const server = new McpServer(
-    { name: "agent-courier", version: "0.1.0" },
+    { name: "agent-courier", version: "2026.11.11" },
     { instructions: INSTRUCTIONS },
   );
   const { store } = deps;
