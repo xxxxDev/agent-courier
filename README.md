@@ -98,7 +98,7 @@ These two are real screens from one machine.
 - Codex 0.167.1 and `agy` 1.5.5 can connect too, on one machine and between two. Neither shows
   agent-courier's approval question, so turn on `courier auto-approve` for their agents. In its
   interactive screen, each then asks you itself before it calls a tool, and Codex shows the text.
-  Run without a screen (`codex exec`, `agy -p`), they send without anyone seeing the message.
+  Run without a screen and with their own approvals turned off, they send unseen.
   Refer to [docs/mcp.md](docs/mcp.md#connect-a-client).
 
 ## Quick start

@@ -11,22 +11,26 @@ The endpoint speaks MCP version 2026-07-28. Each request is independent: there i
 `initialize` handshake and no session. When a call needs your approval, the server answers
 with `input_required`. The client asks you, then sends the call again with your answer.
 
-To approve sends, the client must speak MCP 2026-07-28 and support form elicitation. Claude
-Code 2.1.295 and 2.1.311 were tested end to end between two machines over SSH. The Antigravity
-CLI (`agy`) 1.5.5 also speaks 2026-07-28, but it does not show agent-courier's approval
-question: it declines it at once, in its interactive screen too, so nothing is sent. Turn on
-auto-approve for an `agy` agent. `agy` then asks "Allow calling this tool?" before each call,
-with the tool name but not the text; allowing sends the message, denying sends nothing.
-
-The endpoint also serves clients that speak an older version (2025-11-25 and earlier), such as
+To approve sends, the client must speak MCP 2026-07-28 and support form elicitation. The
+endpoint also serves clients that speak an older version (2025-11-25 and earlier), such as
 Codex, without a session. All tools work, but such a client can never be asked: each send is
 refused unless auto-approve is on for that agent (see [Auto-approve](#auto-approve)).
 
-On one machine, Claude Code 2.1.322, Codex 0.167.1 and `agy` 1.5.5 were tested in every
-combination, the same client on both sides included: each sent to and answered each of the
-three, with auto-approve on. Between two machines (macOS on Apple silicon and on Intel, over
-SSH), Claude Code, Codex and `agy` on one each sent to Codex and `agy` on the other, and each
-reply came back.
+### Clients
+
+Only what was tested is listed.
+
+| Client and tested versions            | MCP version | Shows agent-courier's question                         | Auto-approve | Its own question before a call | Run without a screen                                                                                                                                  | Token kept in                                                      |
+| ------------------------------------- | ----------- | ------------------------------------------------------ | ------------ | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| Claude Code 2.1.295, 2.1.311, 2.1.322 | 2026-07-28  | Yes, with the whole text under Send                    | Not needed   | None                           | `claude -p` cannot answer, so the send is refused; with auto-approve on, it goes without anyone seeing it                                             | Its configuration, `~/.claude.json` with the default (local) scope |
+| Codex 0.167.1                         | 2025-06-18  | No: the send is refused ("this client cannot ask")     | Needed       | Recipient and text             | `codex exec` blocks the send unless `default_tools_approval_mode = "approve"`; with that and auto-approve on, nobody sees the message                 | The environment variable named in `bearer_token_env_var`           |
+| `agy` 1.5.5                           | 2026-07-28  | No: it declines at once, in its interactive screen too | Needed       | Tool name only                 | `agy -p` denies the tool call itself, so nothing is sent; with `--dangerously-skip-permissions` and auto-approve on, it goes without anyone seeing it | `~/.gemini/config/mcp_config.json`                                 |
+
+On one machine, these three were tested in every combination, the same client on both sides
+included: each sent to and answered each of the three, with auto-approve on. Between two
+machines (macOS on Apple silicon and on Intel, over SSH), Claude Code, Codex and `agy` on one
+each sent to Codex and `agy` on the other, and each reply came back. Claude Code showing
+agent-courier's question was tested between two machines with 2.1.295 and 2.1.311.
 
 How the approval question looks depends on the client version:
 
@@ -42,58 +46,68 @@ whole text; the size line above it tells you how long the text is.
 
 ## Connect a client
 
-`courier agent add <name>` prints the command for Claude Code:
+Each client uses the same URL and the token that `courier agent add <name>` prints. One token
+is one agent. Do not give the same token to two sessions: they would share one inbox.
+
+### Claude Code
+
+`courier agent add <name>` prints the command:
 
 ```bash
 claude mcp add --transport http courier http://127.0.0.1:47800/mcp \
   --header "Authorization: Bearer cour_..."
 ```
 
-- Run it in the project directory of the session. One token is one agent. Do not give the same
-  token to two sessions: they would share one inbox.
+- Run it in the project directory of the session.
 - Claude Code keeps the header, with the token, in its configuration. Do not let other persons
   read that file.
-- For a different client, use the same URL and header. To approve sends, it must use MCP
-  2026-07-28 and support form elicitation. An older client can connect, but sends only with
-  auto-approve on (see [Protocol](#protocol)).
-- For Codex, add the server to `~/.codex/config.toml` and keep the token in an environment
-  variable:
 
-  ```toml
-  [mcp_servers.courier]
-  url = "http://127.0.0.1:47800/mcp"
-  bearer_token_env_var = "COURIER_TOKEN"
-  ```
+### Codex
 
-  In its interactive screen, Codex 0.167.1 asks before each call and shows the arguments: the
-  recipient and the text. Allow sends the message; Cancel sends nothing. With
-  `courier auto-approve` on, that question is the only check by a person. In `codex exec`,
-  sends are blocked unless you set `default_tools_approval_mode = "approve"` in that section;
-  with that setting and auto-approve on, no person sees a message before it goes.
+Add the server to `~/.codex/config.toml` and keep the token in an environment variable:
 
-- For `agy`, add the server with its own command:
+```toml
+[mcp_servers.courier]
+url = "http://127.0.0.1:47800/mcp"
+bearer_token_env_var = "COURIER_TOKEN"
 
-  ```bash
-  agy mcp add --header "Authorization: Bearer cour_..." courier http://127.0.0.1:47800/mcp
-  ```
+[shell_environment_policy]
+exclude = ["COURIER_TOKEN"]
+```
 
-  `agy` 1.5.5 keeps the header, with the token, in `~/.gemini/config/mcp_config.json`.
-
+- Codex cannot show agent-courier's question, so turn on `courier auto-approve` for its agent.
+- In its interactive screen, Codex 0.167.1 asks before each call and shows the recipient and
+  the text. Allow sends the message; Cancel sends nothing. With auto-approve on, that question
+  is the only check by a person.
+- In `codex exec`, sends are blocked unless you set `default_tools_approval_mode = "approve"`
+  in the `mcp_servers.courier` section. With that setting and auto-approve on, no person sees a
+  message before it goes.
 - Codex passes its environment to the shell commands it runs, so an agent could read the token
-  and use it to answer its own approval questions. Exclude the variable in the same file
-  (tested with Codex 0.167.1). Set the variable only where Codex starts, not in a file the
-  agent can read, such as `~/.zshrc`:
+  and use it to answer its own approval questions. The `shell_environment_policy` lines above
+  hide it (tested with Codex 0.167.1). Set the variable only where Codex starts, not in a file
+  the agent can read, such as `~/.zshrc`.
 
-  ```toml
-  [shell_environment_policy]
-  exclude = ["COURIER_TOKEN"]
-  ```
+### agy
+
+Add the server with its own command:
+
+```bash
+agy mcp add --header "Authorization: Bearer cour_..." courier http://127.0.0.1:47800/mcp
+```
+
+- `agy` 1.5.5 keeps the header, with the token, in `~/.gemini/config/mcp_config.json`.
+- `agy` does not show agent-courier's question: it declines it, so nothing is sent. Turn on
+  `courier auto-approve` for its agent.
+- `agy` then asks "Allow calling this tool?" before each call, with the tool name but not the
+  text. Allowing sends the message; denying sends nothing.
+- `agy -p` cannot ask, so it denies the call itself and nothing is sent. With
+  `--dangerously-skip-permissions` and auto-approve on, no person sees a message before it goes.
 
 > [!IMPORTANT]
 > Prevent agent access to the data directory (`~/.config/agent-courier`) and to the client
 > configuration or environment variable that holds the token. For example, use a sandbox rule
-> that denies read and write access. A program with the token can act as that agent and can answer its approval
-> questions.
+> that denies read and write access. A program with the token can act as that agent and can
+> answer its approval questions.
 
 ## Tools
 

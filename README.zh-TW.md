@@ -97,7 +97,7 @@ Codex 和 `agy` 不會顯示這個問題。對它們的 agent 開了自動核准
 - Codex 0.167.1 和 `agy` 1.5.5 也能連上，單機和跨機都測過。兩者都不會顯示
   agent-courier 的確認問題，所以要對它們的 agent 開 `courier auto-approve`。
   開了之後，在互動介面裡它們呼叫工具前會自己問你，Codex 還會顯示訊息內容。
-  無介面執行時（`codex exec`、`agy -p`），訊息會在沒人看過的情況下送出。
+  無介面執行、又關掉它們自己的核准時，訊息會在沒人看過的情況下送出。
   請看 [docs/mcp.md](docs/mcp.md#connect-a-client)。
 
 ## 快速開始
