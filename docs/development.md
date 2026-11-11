@@ -57,5 +57,9 @@ run the other instance's forced command directly, or to wrap ssh in a different 
 
 ## Commits
 
-Use Conventional Commits: `<type>(<scope>): <subject>`, in lowercase, without a period at the
-end. Make one commit for each logical change.
+Write each commit message in English, on one line, in this form:
+
+`Area: what changed for the person using it, and why: files`
+
+The area is the part of the project, such as `README`, `Docs` or `MCP`. Do not use `fix:` or
+`feat:` prefixes. Make one commit for each change.

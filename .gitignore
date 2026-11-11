@@ -5,7 +5,6 @@ node_modules/
 state.json
 state.lock
 
-# The test suites are kept privately and not published.
 *.test.ts
 /test/
 
