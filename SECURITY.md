@@ -1,10 +1,10 @@
 # Security
 
-agent-courier passes messages between Claude Code sessions on machines that you control, over
-SSH. A paired machine is trusted as a whole, and approvals guard against the model, not against
-code that runs as your user. See [docs/security.md](docs/security.md) for the full security
-model: the network, authentication, trust between machines, the secrets and the conditions of
-the design.
+agent-courier passes messages between agent sessions (Claude Code and other MCP clients) on
+machines that you control, over SSH. A paired machine is trusted as a whole, and approvals
+guard against the model, not against code that runs as your user. See
+[docs/security.md](docs/security.md) for the full security model: the network,
+authentication, trust between machines, the secrets and the conditions of the design.
 
 ## Reporting a vulnerability
 

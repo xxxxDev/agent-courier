@@ -1,7 +1,8 @@
 # Agent access (MCP)
 
 The MCP endpoint is `http://127.0.0.1:<port>/mcp` (port 47800 by default). It uses Streamable
-HTTP. One `courier serve` gives the endpoint to all the Claude Code sessions on its machine.
+HTTP. One `courier serve` gives the endpoint to all the agent sessions on its machine: Claude
+Code, and other MCP clients such as Codex and `agy`.
 The bearer token of a request tells the endpoint which agent the session is.
 
 ## Protocol
@@ -12,12 +13,20 @@ with `input_required`. The client asks you, then sends the call again with your 
 
 To approve sends, the client must speak MCP 2026-07-28 and support form elicitation. Claude
 Code 2.1.295 and 2.1.311 were tested end to end between two machines over SSH. The Antigravity
-CLI (`agy`) 1.5.5 also speaks 2026-07-28; it was tested on one machine.
+CLI (`agy`) 1.5.5 also speaks 2026-07-28, but it does not show agent-courier's approval
+question: it declines it at once, in its interactive screen too, so nothing is sent. Turn on
+auto-approve for an `agy` agent. `agy` then asks "Allow calling this tool?" before each call,
+with the tool name but not the text; allowing sends the message, denying sends nothing.
 
 The endpoint also serves clients that speak an older version (2025-11-25 and earlier), such as
 Codex, without a session. All tools work, but such a client can never be asked: each send is
-refused unless auto-approve is on for that agent (see [Auto-approve](#auto-approve)). Codex
-0.167.1 was tested on one machine, with Claude Code and with Codex on the other side.
+refused unless auto-approve is on for that agent (see [Auto-approve](#auto-approve)).
+
+On one machine, Claude Code 2.1.322, Codex 0.167.1 and `agy` 1.5.5 were tested in every
+combination, the same client on both sides included: each sent to and answered each of the
+three, with auto-approve on. Between two machines (macOS on Apple silicon and on Intel, over
+SSH), Claude Code, Codex and `agy` on one each sent to Codex and `agy` on the other, and each
+reply came back.
 
 How the approval question looks depends on the client version:
 
@@ -56,13 +65,24 @@ claude mcp add --transport http courier http://127.0.0.1:47800/mcp \
   bearer_token_env_var = "COURIER_TOKEN"
   ```
 
-  Codex asks for its own approval before it calls an MCP tool. In `codex exec`, which cannot
-  ask, set `default_tools_approval_mode = "approve"` in that section, or the sends are blocked.
-  With that setting and `courier auto-approve` on, no person sees a message before it goes.
+  In its interactive screen, Codex 0.167.1 asks before each call and shows the arguments: the
+  recipient and the text. Allow sends the message; Cancel sends nothing. With
+  `courier auto-approve` on, that question is the only check by a person. In `codex exec`,
+  sends are blocked unless you set `default_tools_approval_mode = "approve"` in that section;
+  with that setting and auto-approve on, no person sees a message before it goes.
+
+- For `agy`, add the server with its own command:
+
+  ```bash
+  agy mcp add --header "Authorization: Bearer cour_..." courier http://127.0.0.1:47800/mcp
+  ```
+
+  `agy` 1.5.5 keeps the header, with the token, in `~/.gemini/config/mcp_config.json`.
 
 - Codex passes its environment to the shell commands it runs, so an agent could read the token
   and use it to answer its own approval questions. Exclude the variable in the same file
-  (tested with Codex 0.167.1):
+  (tested with Codex 0.167.1). Set the variable only where Codex starts, not in a file the
+  agent can read, such as `~/.zshrc`:
 
   ```toml
   [shell_environment_policy]
@@ -265,7 +285,7 @@ again. Your approval starts the count again. The receiving machine applies the s
 after 12 messages without an approval on its side, it refuses more for now, and they stay
 queued on the sending machine.
 
-A client on an older MCP version cannot ask, so at the limit its sends are refused. To start
+A client that cannot ask, such as Codex or `agy`, has its sends refused at the limit. To start
 the count again, approve one send for that agent from a client that can ask, such as Claude
 Code with the same token.
 

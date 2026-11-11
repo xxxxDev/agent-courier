@@ -24,6 +24,9 @@ agent-courier lets Claude Code sessions on different machines send messages to e
 machines can use different Claude accounts. The messages go over SSH between your own machines.
 No third party carries them.
 
+Codex and the Antigravity CLI (`agy`) can take part too, as agents next to Claude Code. Refer to
+[Requirements](#requirements).
+
 > [!WARNING]
 > Use agent-courier only between machines that you control. A paired machine is trusted as a
 > whole: any program on it that can read its courier files can send as its agents. Read
@@ -33,9 +36,10 @@ No third party carries them.
 > untrusted, but it cannot stop an agent from following them.
 >
 > Approvals guard against the model, not against code on your machine. A local agent with
-> shell access can run `courier auto-approve` or read its token from Claude Code's
-> configuration, and then send without a question. Keep such agents in a sandbox that denies
-> access to `~/.config/agent-courier`, to Claude Code's configuration and to `courier`.
+> shell access can run `courier auto-approve` or read its token from the client's configuration
+> (or the environment variable that holds it), and then send without a question. Keep such
+> agents in a sandbox that denies access to `~/.config/agent-courier`, to that configuration
+> and to `courier`.
 
 <p align="center">
   <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-dark.png"><img src="docs/assets/architecture-light.png" alt="Machine A's courier serve calls machine B over SSH with a dedicated key; there a forced command, courier exchange, reads and writes the state file that machine B's courier serve uses. Claude Code sessions on each machine reach their own courier serve over MCP on 127.0.0.1."></picture>
@@ -80,9 +84,11 @@ These are real screens from two machines on different Claude accounts, linked ov
 - On each machine, a Claude Code that speaks MCP 2026-07-28 with form elicitation. Use 2.1.311
   or later on any machine where you approve sends: 2.1.295 works but cuts long lines in the
   approval question.
-- Other MCP clients, such as Codex, can connect too. A client that speaks an older MCP version
-  cannot ask you, so it sends only with `courier auto-approve` on. Refer to
-  [docs/mcp.md](docs/mcp.md#protocol).
+- Codex 0.167.1 and `agy` 1.5.5 can connect too, on one machine and between two. Neither shows
+  agent-courier's approval question, so turn on `courier auto-approve` for their agents. In its
+  interactive screen, each then asks you itself before it calls a tool, and Codex shows the text.
+  Run without a screen (`codex exec`, `agy -p`), they send without anyone seeing the message.
+  Refer to [docs/mcp.md](docs/mcp.md#connect-a-client).
 
 ## Quick start
 
@@ -103,8 +109,8 @@ courier serve                              courier serve
 ```
 
 `courier agent add` prints a `claude mcp add` command. Run it where that Claude Code session
-works. The SSH key and its forced command need some steps first: see
-[docs/setup.md](docs/setup.md).
+works. For Codex or `agy`, refer to [docs/mcp.md](docs/mcp.md#connect-a-client). The SSH key
+and its forced command need some steps first: see [docs/setup.md](docs/setup.md).
 
 ## Limits
 
@@ -147,5 +153,6 @@ To report a bug or send a change, see [CONTRIBUTING.md](CONTRIBUTING.md).
 The code is under the [MIT License](LICENSE). The agent-courier logo isn't: see [BRAND.md](BRAND.md).
 
 agent-courier is an independent project. It is not made by, affiliated with or endorsed by Anthropic. Claude and Claude Code are trademarks of Anthropic.
+It is not affiliated with OpenAI or Google either. Codex and Antigravity belong to their respective owners.
 
 Made by [V-AX](https://v-ax.com).

@@ -24,6 +24,9 @@ agent-courier 讓不同機器上的 Claude Code 工作階段互相傳訊息。
 各台機器可以用不同的 Claude 帳號。
 訊息走你自己機器之間的 SSH，不經過任何第三方。
 
+Codex 和 Antigravity CLI（`agy`）也能當 agent 加入，和 Claude Code 並用。
+請看[需求](#需求)。
+
 > [!WARNING]
 > 只在你自己掌控的機器之間使用 agent-courier。
 > 配對的機器會被整台信任：上面任何能讀到 courier 檔案的程式，都能以它的 agent 身分傳訊息。
@@ -33,9 +36,9 @@ agent-courier 讓不同機器上的 Claude Code 工作階段互相傳訊息。
 > agent-courier 會把它標成不可信，但無法阻止 agent 照著做。
 >
 > 確認步驟防的是模型，不是你機器上的程式。
-> 能用 shell 的本機 agent 可以執行 `courier auto-approve`，或從 Claude Code 的設定讀出它的 token。
+> 能用 shell 的本機 agent 可以執行 `courier auto-approve`，或從用戶端設定（或存放它的環境變數）讀出 token。
 > 這樣它就能不經詢問傳訊息。
-> 這類 agent 請放在沙盒裡，禁止它存取 `~/.config/agent-courier`、Claude Code 的設定和 `courier`。
+> 這類 agent 請放在沙盒裡，禁止它存取 `~/.config/agent-courier`、那份設定和 `courier`。
 
 <p align="center">
   <picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/architecture-dark.png"><img src="docs/assets/architecture-light.png" alt="機器 A 的 courier serve 用專用金鑰透過 SSH 呼叫機器 B；在 B 上由強制指令 courier exchange 讀寫機器 B 的 courier serve 所用的狀態檔。各台機器上的 Claude Code 工作階段透過 127.0.0.1 上的 MCP 連到自己的 courier serve。"></picture>
@@ -80,9 +83,11 @@ agent 傳送任何東西之前，Claude Code 會先問你，全文放在 **Send*
 - 每台機器上支援 MCP 2026-07-28 和表單詢問（form elicitation）的 Claude Code。
   要在哪台機器上確認傳送，那台就用 2.1.311 以上。
   2.1.295 也能用，但確認問題裡的長行會被截斷。
-- Codex 等其他 MCP 用戶端也能連上。只支援舊版 MCP 的用戶端沒辦法問你，
-  所以要開 `courier auto-approve` 才能傳送。
-  請看 [docs/mcp.md](docs/mcp.md#protocol)。
+- Codex 0.167.1 和 `agy` 1.5.5 也能連上，單機和跨機都測過。兩者都不會顯示
+  agent-courier 的確認問題，所以要對它們的 agent 開 `courier auto-approve`。
+  開了之後，在互動介面裡它們呼叫工具前會自己問你，Codex 還會顯示訊息內容。
+  無介面執行時（`codex exec`、`agy -p`），訊息會在沒人看過的情況下送出。
+  請看 [docs/mcp.md](docs/mcp.md#connect-a-client)。
 
 ## 快速開始
 
@@ -103,6 +108,7 @@ courier serve                              courier serve
 ```
 
 `courier agent add` 會印出一行 `claude mcp add` 指令，在那個 Claude Code 工作階段所在的地方執行它。
+Codex 或 `agy` 請看 [docs/mcp.md](docs/mcp.md#connect-a-client)。
 SSH 金鑰和它的強制指令需要先做幾個步驟。
 請看 [docs/setup.md](docs/setup.md)。
 
@@ -147,5 +153,6 @@ SSH 金鑰和它的強制指令需要先做幾個步驟。
 程式碼以 [MIT License](LICENSE) 釋出。agent-courier 的標誌不在此授權內，見 [BRAND.md](BRAND.md)。
 
 agent-courier 是獨立專案，並非由 Anthropic 製作，也與其沒有關係或背書。Claude 和 Claude Code 是 Anthropic 的商標。
+本專案也與 OpenAI、Google 沒有關係。Codex 和 Antigravity 的名稱屬於各自的所有者。
 
 由 [V-AX](https://v-ax.com) 製作。

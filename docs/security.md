@@ -83,18 +83,19 @@ programs that run as your own user on the same machine: refer to
 
 ## Secrets
 
-| Secret                           | Location                                                     | Mode          | Notes                                                                                                                                                      |
-| -------------------------------- | ------------------------------------------------------------ | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Agent token                      | Shown once by `courier agent add`                            | None          | Not stored by agent-courier. A program with it is that agent and can answer its approval questions                                                         |
-| Copy of the agent token          | Claude Code's configuration, written by `claude mcp add`     | The client's  | With the default (local) scope, it is in `~/.claude.json`. Do not use `--scope project`: it writes `.mcp.json` into the project, which can be committed    |
-| Copy in shell history            | Your shell's history file, if you ran `claude mcp add` there | The shell's   | Run the command with a leading space when your shell ignores those (`HISTCONTROL=ignorespace`), or remove the line afterwards                              |
-| Copy for Codex                   | The environment variable named in `bearer_token_env_var`     | The process's | Codex passes its environment to the commands it runs; exclude the variable with `shell_environment_policy` (see [mcp.md](mcp.md#connect-a-client))         |
-| Token hashes, pairings, messages | `~/.config/agent-courier/state.json`                         | 0600          | Holds the text of messages for 7 days. A program that can write it can act as any agent                                                                    |
-| Data directory                   | `~/.config/agent-courier/`                                   | 0700          | `COURIER_HOME` moves it                                                                                                                                    |
-| Dedicated SSH private key        | Machine A, for example `~/.ssh/courier-b`                    | 0600          | With it, a program can exchange for that one pairing: deliver to machine B's agents that allow machine A's agents, and take what they queued for machine A |
-| Pinned host key                  | Machine A, for example `~/.ssh/known_hosts_courier`          | 0644          | Not secret, but its integrity matters                                                                                                                      |
-| Forced-command line              | Machine B, `~/.ssh/authorized_keys`                          | 0600          | Names one pairing. Remove the line to revoke the key                                                                                                       |
-| Pairing code                     | Shown once by `courier pair`                                 | None          | Stored only as a hash. One use, 10 minutes                                                                                                                 |
+| Secret                           | Location                                                                      | Mode          | Notes                                                                                                                                                                                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent token                      | Shown once by `courier agent add`                                             | None          | Not stored by agent-courier. A program with it is that agent and can answer its approval questions                                                                                                                     |
+| Copy of the agent token          | Claude Code's configuration, written by `claude mcp add`                      | The client's  | With the default (local) scope, it is in `~/.claude.json`. Do not use `--scope project`: it writes `.mcp.json` into the project, which can be committed                                                                |
+| Copy in shell history            | Your shell's history file, if you ran `claude mcp add` or `agy mcp add` there | The shell's   | Run the command with a leading space when your shell ignores those (`HISTCONTROL=ignorespace`), or remove the line afterwards                                                                                          |
+| Copy for Codex                   | The environment variable named in `bearer_token_env_var`                      | The process's | Codex passes its environment to the commands it runs; exclude the variable with `shell_environment_policy`, and do not set it in a file the agent can read, such as `~/.zshrc` (see [mcp.md](mcp.md#connect-a-client)) |
+| Copy for `agy`                   | `~/.gemini/config/mcp_config.json`, written by `agy mcp add`                  | The client's  | Prevent agent access to this file, as for Claude Code                                                                                                                                                                  |
+| Token hashes, pairings, messages | `~/.config/agent-courier/state.json`                                          | 0600          | Holds the text of messages for 7 days. A program that can write it can act as any agent                                                                                                                                |
+| Data directory                   | `~/.config/agent-courier/`                                                    | 0700          | `COURIER_HOME` moves it                                                                                                                                                                                                |
+| Dedicated SSH private key        | Machine A, for example `~/.ssh/courier-b`                                     | 0600          | With it, a program can exchange for that one pairing: deliver to machine B's agents that allow machine A's agents, and take what they queued for machine A                                                             |
+| Pinned host key                  | Machine A, for example `~/.ssh/known_hosts_courier`                           | 0644          | Not secret, but its integrity matters                                                                                                                                                                                  |
+| Forced-command line              | Machine B, `~/.ssh/authorized_keys`                                           | 0600          | Names one pairing. Remove the line to revoke the key                                                                                                                                                                   |
+| Pairing code                     | Shown once by `courier pair`                                                  | None          | Stored only as a hash. One use, 10 minutes                                                                                                                                                                             |
 
 agent-courier reads `state.json` only if all these conditions are true:
 
@@ -145,10 +146,11 @@ over a lock only when its process is gone or it is older than 60 seconds.
 These are the limits of what agent-courier can do. Plan for them.
 
 - **Approvals guard against the model, not against local code.** An agent that can run shell
-  commands as your user can run `courier auto-approve <agent> on`, read its token from Claude
-  Code's configuration, or change `state.json`. Then it can send without a question. Keep
-  agents that have shell access in a sandbox that denies read and write access to the data
-  directory and to Claude Code's configuration, and that denies running `courier`.
+  commands as your user can run `courier auto-approve <agent> on`, read its token from the
+  client's configuration (or the environment variable that holds it), or change `state.json`.
+  Then it can send without a question. Keep agents that have shell access in a sandbox that
+  denies read and write access to the data directory and to that configuration, and that
+  denies running `courier`.
 - **The client sends your answer to the server.** Claude Code shows the approval question and
   sends your answer. The server cannot see if you clicked or if a program answered. Use a client
   that you trust.

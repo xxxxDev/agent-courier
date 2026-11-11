@@ -18,8 +18,9 @@ agent on B). Use your own names.
 - OpenSSH: the client on machine A, the server on machine B.
 - Claude Code that speaks MCP 2026-07-28 and supports form elicitation. Versions 2.1.295 and
   2.1.311 were tested; approve sends in 2.1.311 or later, because 2.1.295 cuts long lines in the
-  approval question. Older MCP clients such as Codex can connect too, but send only with
-  auto-approve on. Refer to [mcp.md](mcp.md#protocol).
+  approval question. Codex and `agy` can connect too, but they do not show agent-courier's
+  approval question, so they send only with auto-approve on. Refer to
+  [mcp.md](mcp.md#connect-a-client).
 
 ## Install
 
@@ -186,14 +187,15 @@ of the other at the next exchange.
 
 ## 8. Add agents and allow them
 
-Each Claude Code session that uses agent-courier is one agent. Add an agent on each machine:
+Each session that uses agent-courier (Claude Code, Codex or `agy`) is one agent. Add an agent on each machine:
 
 ```bash
 courier agent add writer    # on machine A
 courier agent add helper    # on machine B
 ```
 
-The command shows the token one time and a `claude mcp add` command, for example:
+The command shows the token one time and a `claude mcp add` command (for Codex or `agy`, refer
+to [mcp.md](mcp.md#connect-a-client)), for example:
 
 ```bash
 claude mcp add --transport http courier http://127.0.0.1:47800/mcp --header "Authorization: Bearer cour_..."
@@ -292,6 +294,7 @@ Then restart `courier serve`. Update both machines: the two must use the same ex
 | Messages stay `queued`                                                    | The other side is paused, does not answer, or limits its inbox. `courier status` on both machines shows the reason. After 24 hours, messages expire                                   |
 | Claude Code shows `unauthorized` (401)                                    | The token is wrong, or the agent was removed. Add the agent again and run the new `claude mcp add`                                                                                    |
 | The agent gets `Denied: ... this client cannot ask (MCP elicitation)`     | The client cannot show approval questions. Use a client with elicitation, or turn on `courier auto-approve` for that agent                                                            |
+| `agy` gets `Not sent: the user did not approve.` without a question       | `agy` does not show agent-courier's approval question and declines it. Turn on `courier auto-approve` for that agent; `agy` then asks before each tool call itself                    |
 | `courier: .../state.json can be read by other users; run chmod 600 on it` | Someone changed the mode. Run `chmod 600` on the file (and `chmod 700` on the directory)                                                                                              |
 | `could not lock .../state.lock`                                           | Another process holds the lock for more than 5 seconds. A lock older than 10 seconds is taken over automatically                                                                      |
 

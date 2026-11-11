@@ -10,4 +10,5 @@ You may keep these files in your copy of the repository and use them to refer to
 If you publish your own tool or fork built on agent-courier, use your own logo instead.
 
 Claude and Claude Code are trademarks of Anthropic. agent-courier is an independent project
-and is not made by, affiliated with or endorsed by Anthropic.
+and is not made by, affiliated with or endorsed by Anthropic. It is not affiliated with OpenAI
+or Google either. Codex and Antigravity belong to their respective owners.
