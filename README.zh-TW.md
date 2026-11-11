@@ -76,6 +76,17 @@ agent 傳送任何東西之前，Claude Code 會先問你，全文放在 **Send*
 
 這些是兩台用不同 Claude 帳號、以 SSH 連線的機器上的真實畫面。
 
+Codex 和 `agy` 不會顯示這個問題。對它們的 agent 開了自動核准之後，
+它們會在互動介面裡、呼叫前自己問你。Codex 會列出收件者和訊息內容：
+
+<p align="center"><img src="docs/assets/codex-approval.png" alt="Codex 詢問：要允許 courier MCP 伺服器執行 peer_send 嗎？列出 idempotency key、訊息內容和收件者 machine-b/helper，並有 Allow 和 Cancel" width="760"></p>
+
+`agy` 只顯示工具名稱：
+
+<p align="center"><img src="docs/assets/agy-approval.png" alt="Antigravity CLI 詢問：要允許呼叫 courier/peer_send 這個工具嗎？並有允許和拒絕的選項" width="760"></p>
+
+這兩張是在同一台機器上的真實畫面。
+
 ## 需求
 
 - Node 22.18 以上、Git 和 npm。

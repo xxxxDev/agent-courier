@@ -77,6 +77,17 @@ The answer comes back into the session that asked:
 
 These are real screens from two machines on different Claude accounts, linked over SSH.
 
+Codex and `agy` do not show that question. With auto-approve on for their agents, each asks
+you itself before the call, in its interactive screen. Codex shows the recipient and the text:
+
+<p align="center"><img src="docs/assets/codex-approval.png" alt="Codex asks: Allow the courier MCP server to run tool peer_send? It lists the idempotency key, the text and the recipient machine-b/helper, with Allow and Cancel" width="760"></p>
+
+`agy` shows only the tool name:
+
+<p align="center"><img src="docs/assets/agy-approval.png" alt="The Antigravity CLI asks: Allow calling this tool? for courier/peer_send, with options to allow or deny" width="760"></p>
+
+These two are real screens from one machine.
+
 ## Requirements
 
 - Node 22.18 or later, Git and npm.
